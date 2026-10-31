@@ -936,6 +936,8 @@ pub struct Apu {
     noise: NoiseChannel,
     pub dmc: DmcChannel,
     frame_counter_mode: u8,
+    pub frame_irq_inhibit: bool,
+    pub frame_irq_pending: bool,
     frame_step: usize,
     cpu_cycle_count: usize,
     sample_acc: f64,
@@ -955,6 +957,8 @@ impl Apu {
             noise: NoiseChannel::new(),
             dmc: DmcChannel::new(),
             frame_counter_mode: 0,
+            frame_irq_inhibit: false,
+            frame_irq_pending: false,
             frame_step: 0,
             cpu_cycle_count: 0,
             sample_acc: 0.0,
@@ -1091,6 +1095,10 @@ impl Apu {
             }
             0x4017 => {
                 self.frame_counter_mode = (data >> 7) & 1;
+                self.frame_irq_inhibit = (data & 0x40) != 0;
+                if self.frame_irq_inhibit {
+                    self.frame_irq_pending = false;
+                }
                 self.frame_step = 0;
                 if self.frame_counter_mode == 1 {
                     self.clock_quarter_frame();
@@ -1109,7 +1117,9 @@ impl Apu {
             if self.triangle.length_counter > 0 { status |= 0x04; }
             if self.noise.length_counter > 0    { status |= 0x08; }
             if self.dmc.bytes_remaining > 0     { status |= 0x10; }
+            if self.frame_irq_pending            { status |= 0x40; }
             if self.dmc.irq_pending             { status |= 0x80; }
+            self.frame_irq_pending = false;
             self.dmc.irq_pending = false;
             status
         } else {
@@ -1154,6 +1164,9 @@ impl Apu {
             (0, 14915) => {
                 self.clock_quarter_frame();
                 self.clock_half_frame();
+                if !self.frame_irq_inhibit {
+                    self.frame_irq_pending = true;
+                }
                 self.frame_step = 0;
             }
             (1, 18641) => {
@@ -2768,7 +2781,11 @@ impl Cpu {
         if self.bus.ppu.nmi_interrupt {
             self.bus.ppu.nmi_interrupt = false;
             self.nmi();
-        } else if (self.bus.cart.mmc3_irq_pending || self.bus.apu.dmc.irq_pending) && !self.get_flag(FLAG_I) {
+        } else if (self.bus.cart.mmc3_irq_pending
+            || self.bus.apu.dmc.irq_pending
+            || self.bus.apu.frame_irq_pending)
+            && !self.get_flag(FLAG_I)
+        {
             self.bus.cart.mmc3_irq_pending = false;
             self.irq();
         }
@@ -4141,6 +4158,9 @@ fn render_game_detail_card(
     let thumb_x = mx + 16;
     let thumb_y = my + 38;
 
+    // Desenha a moldura primeiro: a capa será pintada por cima do centro dela.
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, thumb_x - 1, thumb_y - 1, thumb_w + 2, thumb_h + 2, 0x00E5FF);
+
     for y in 0..thumb_h {
         for x in 0..thumb_w {
             let sx = (x * 90) / thumb_w;
@@ -4148,8 +4168,6 @@ fn render_game_detail_card(
             buffer[(thumb_y + y) * CANVAS_WIDTH + (thumb_x + x)] = rom.preview[sy * 90 + sx];
         }
     }
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, thumb_x - 1, thumb_y - 1, thumb_w + 2, thumb_h + 2, 0x2A3B5C);
-
     // Painel de Estatísticas à direita
     let stat_x = mx + 102;
     let mut stat_y = my + 44;
