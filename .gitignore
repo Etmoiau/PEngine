@@ -2,6 +2,7 @@
 /target/
 **/*.rs.bk
 *.pdb
+*.exe
 rustc-ice-*.txt
 
 # ROMs e arquivos de jogos
