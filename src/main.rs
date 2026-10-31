@@ -165,9 +165,9 @@ fn urlencoding_simple(s: &str) -> String {
 // ============================================================================
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum DisplayMode {
-    Windowed = 0,   // Janela com bordas e título
-    Borderless = 1, // Janela sem bordas
-    Fullscreen = 2, // Tela cheia total
+    Windowed = 0,
+    Borderless = 1,
+    Fullscreen = 2,
 }
 
 impl DisplayMode {
@@ -196,34 +196,405 @@ impl DisplayMode {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Language {
+    PtBr = 0, // Português (Brasil) - Padrão
+    PtPt = 1, // Português (Portugal)
+    Es = 2,   // Español
+    En = 3,   // English
+}
+
+impl Language {
+    pub fn from_u8(val: u8) -> Self {
+        match val {
+            1 => Self::PtPt,
+            2 => Self::Es,
+            3 => Self::En,
+            _ => Self::PtBr,
+        }
+    }
+
+    pub fn next(self) -> Self {
+        match self {
+            Self::PtBr => Self::PtPt,
+            Self::PtPt => Self::Es,
+            Self::Es => Self::En,
+            Self::En => Self::PtBr,
+        }
+    }
+
+    pub fn prev(self) -> Self {
+        match self {
+            Self::PtBr => Self::En,
+            Self::PtPt => Self::PtBr,
+            Self::Es => Self::PtPt,
+            Self::En => Self::Es,
+        }
+    }
+
+    pub fn selector_label(self) -> &'static str {
+        match self {
+            Self::PtBr => "< PORTUGUES (BRASIL) >",
+            Self::PtPt => "< PORTUGUES (PORTUGAL) >",
+            Self::Es => "< ESPANOL >",
+            Self::En => "< ENGLISH >",
+        }
+    }
+}
+
+pub struct UiTexts {
+    pub cat_all: &'static str,
+    pub cat_fav: &'static str,
+    pub cat_rec: &'static str,
+    pub open_game_pad: &'static str,
+    pub open_game_kb: &'static str,
+    pub empty_roms_title: &'static str,
+    pub empty_roms_sub1: &'static str,
+    pub empty_roms_sub2: &'static str,
+    pub no_match_title: &'static str,
+    pub no_match_sub: &'static str,
+    pub search_prompt: &'static str,
+    pub foot_az: &'static str,
+    pub foot_tab: &'static str,
+    pub foot_fav: &'static str,
+    pub foot_search: &'static str,
+    pub foot_folder: &'static str,
+    pub foot_menu: &'static str,
+    pub foot_quit: &'static str,
+    pub foot_kb_hub: &'static str,
+    pub tabs_hub: [&'static str; 4],
+    pub tabs_ingame: [&'static str; 3],
+    pub lbl_display_mode: &'static str,
+    pub val_windowed: &'static str,
+    pub val_borderless: &'static str,
+    pub val_fullscreen: &'static str,
+    pub lbl_aspect: &'static str,
+    pub lbl_scanlines: &'static str,
+    pub lbl_sprite_limit: &'static str,
+    pub val_on: &'static str,
+    pub val_off: &'static str,
+    pub val_original: &'static str,
+    pub val_nolimit: &'static str,
+    pub lbl_volume: &'static str,
+    pub lbl_mute: &'static str,
+    pub lbl_save_slot: &'static str,
+    pub lbl_turbo: &'static str,
+    pub lbl_language: &'static str,
+    pub lbl_quit_emu: &'static str,
+    pub val_quit_now: &'static str,
+    pub lbl_device: &'static str,
+    pub val_pad_conn: &'static str,
+    pub val_kb_usb: &'static str,
+    pub lbl_buttons: &'static str,
+    pub lbl_rew_turbo: &'static str,
+    pub menu_tabs: &'static str,
+    pub menu_adjust: &'static str,
+    pub menu_confirm: &'static str,
+    pub menu_close: &'static str,
+    pub stats_header: &'static str,
+    pub stats_time: &'static str,
+    pub stats_plays: &'static str,
+    pub stats_fav_yes: &'static str,
+    pub stats_fav_no: &'static str,
+    pub detail_btns: [&'static str; 3],
+    pub ig_resume: &'static str,
+    pub ig_save: &'static str,
+    pub ig_load: &'static str,
+    pub ig_ready: &'static str,
+    pub ig_empty: &'static str,
+    pub ig_slot: &'static str,
+    pub ig_reset: &'static str,
+    pub ig_to_hub: &'static str,
+}
+
+pub fn get_texts(lang: Language) -> UiTexts {
+    match lang {
+        Language::PtBr => UiTexts {
+            cat_all: "TODOS",
+            cat_fav: "* FAVORITOS",
+            cat_rec: "RECENTES",
+            open_game_pad: "ABRIR JOGO",
+            open_game_kb: "> PRESSIONE ENTER <",
+            empty_roms_title: "PASTA 'roms' PRONTA!",
+            empty_roms_sub1: "Coloque seus jogos .nes na pasta 'roms'",
+            empty_roms_sub2: "ou pressione F1 / (Y) para outra pasta",
+            no_match_title: "NENHUM JOGO ENCONTRADO",
+            no_match_sub: "Aperte X / F2 ou LT para mudar o filtro",
+            search_prompt: "BUSCAR JOGO",
+            foot_az: "A-Z",
+            foot_tab: "ABA",
+            foot_fav: "FAV",
+            foot_search: "BUSCA",
+            foot_folder: "PASTA",
+            foot_menu: "MENU",
+            foot_quit: "SAIR",
+            foot_kb_hub: "PGUP/DN: A-Z   TAB: ABA   F: FAV   F2: BUSCA   F1: PASTA   F3: MENU",
+            tabs_hub: ["1.VIDEO", "2.AUDIO", "3.SISTEMA", "4.CONTROLE"],
+            tabs_ingame: ["1.PARTIDA", "2.VIDEO", "3.AUDIO"],
+            lbl_display_mode: "MODO DE TELA",
+            val_windowed: "< JANELA (1024x576) >",
+            val_borderless: "< SEM BORDAS >",
+            val_fullscreen: "< TELA CHEIA >",
+            lbl_aspect: "FORMATO DE TELA",
+            lbl_scanlines: "EFEITO DE TELA",
+            lbl_sprite_limit: "LIMITE 8 SPRITES",
+            val_on: "< ATIVADO >",
+            val_off: "< DESATIVADO >",
+            val_original: "< ORIGINAL (FLICKER) >",
+            val_nolimit: "< SEM LIMITE >",
+            lbl_volume: "VOLUME GERAL",
+            lbl_mute: "MUTAR AUDIO (MUTE)",
+            lbl_save_slot: "SLOT SAVE ATIVO",
+            lbl_turbo: "VELOCIDADE TURBO",
+            lbl_language: "IDIOMA / LANGUAGE",
+            lbl_quit_emu: "SAIR DO EMULADOR",
+            val_quit_now: "[ FECHAR AGORA ]",
+            lbl_device: "DISPOSITIVO",
+            val_pad_conn: "XBOX GAMEPAD (CONECTADO)",
+            val_kb_usb: "TECLADO PADRAO (USB)",
+            lbl_buttons: "BOTAO A / B",
+            lbl_rew_turbo: "REBOBINAR / TURBO",
+            menu_tabs: "ABAS",
+            menu_adjust: "AJUSTAR",
+            menu_confirm: "CONFIRMAR",
+            menu_close: "FECHAR",
+            stats_header: "ESTATISTICAS DE JOGO",
+            stats_time: "TEMPO JOGADO",
+            stats_plays: "VEZES INICIADO",
+            stats_fav_yes: "STATUS: * FAVORITO",
+            stats_fav_no: "STATUS: NA BIBLIOTECA",
+            detail_btns: ["JOGAR", "RESETAR", "VOLTAR"],
+            ig_resume: "CONTINUAR JOGANDO",
+            ig_save: "SALVAR ESTADO",
+            ig_load: "CARREGAR ESTADO",
+            ig_ready: "< PRONTO > [F8]",
+            ig_empty: "< VAZIO >",
+            ig_slot: "TROCAR SLOT ATIVO",
+            ig_reset: "REINICIAR CONSOLE",
+            ig_to_hub: "SAIR PARA O HUB ARCADE",
+        },
+        Language::PtPt => UiTexts {
+            cat_all: "TODOS",
+            cat_fav: "* FAVORITOS",
+            cat_rec: "RECENTES",
+            open_game_pad: "ABRIR JOGO",
+            open_game_kb: "> PRIMA ENTER <",
+            empty_roms_title: "PASTA 'roms' PRONTA!",
+            empty_roms_sub1: "Coloque os seus jogos .nes na pasta 'roms'",
+            empty_roms_sub2: "ou prima F1 / (Y) para escolher outra pasta",
+            no_match_title: "NENHUM JOGO ENCONTRADO",
+            no_match_sub: "Prima X / F2 ou LT para mudar o filtro",
+            search_prompt: "PESQUISAR JOGO",
+            foot_az: "A-Z",
+            foot_tab: "ABA",
+            foot_fav: "FAV",
+            foot_search: "PESQUISA",
+            foot_folder: "PASTA",
+            foot_menu: "OPCOES",
+            foot_quit: "SAIR",
+            foot_kb_hub: "PGUP/DN: A-Z   TAB: ABA   F: FAV   F2: PESQUISA   F1: PASTA   F3: OPCOES",
+            tabs_hub: ["1.ECRAN", "2.AUDIO", "3.SISTEMA", "4.COMANDO"],
+            tabs_ingame: ["1.JOGO", "2.ECRAN", "3.AUDIO"],
+            lbl_display_mode: "MODO DE ECRAN",
+            val_windowed: "< JANELA (1024x576) >",
+            val_borderless: "< SEM MOLDURA >",
+            val_fullscreen: "< ECRAN INTEIRO >",
+            lbl_aspect: "PROPORCAO DE ECRAN",
+            lbl_scanlines: "EFEITO DE ECRAN",
+            lbl_sprite_limit: "LIMITE 8 SPRITES",
+            val_on: "< ATIVADO >",
+            val_off: "< DESATIVADO >",
+            val_original: "< ORIGINAL (FLICKER) >",
+            val_nolimit: "< SEM LIMITE >",
+            lbl_volume: "VOLUME GERAL",
+            lbl_mute: "SILENCIAR AUDIO",
+            lbl_save_slot: "RANHURA DE GRAVACAO",
+            lbl_turbo: "VELOCIDADE TURBO",
+            lbl_language: "IDIOMA DO SISTEMA",
+            lbl_quit_emu: "SAIR DO EMULADOR",
+            val_quit_now: "[ ENCERRAR AGORA ]",
+            lbl_device: "DISPOSITIVO",
+            val_pad_conn: "COMANDO XBOX (LIGADO)",
+            val_kb_usb: "TECLADO PADRAO (USB)",
+            lbl_buttons: "BOTAO A / B",
+            lbl_rew_turbo: "REBOBINAR / TURBO",
+            menu_tabs: "ABAS",
+            menu_adjust: "AJUSTAR",
+            menu_confirm: "CONFIRMAR",
+            menu_close: "FECHAR",
+            stats_header: "ESTATISTICAS DO JOGO",
+            stats_time: "TEMPO JOGADO",
+            stats_plays: "VEZES INICIADO",
+            stats_fav_yes: "ESTADO: * FAVORITO",
+            stats_fav_no: "ESTADO: NA BIBLIOTECA",
+            detail_btns: ["JOGAR", "REPOR", "VOLTAR"],
+            ig_resume: "CONTINUAR A JOGAR",
+            ig_save: "GUARDAR ESTADO",
+            ig_load: "CARREGAR ESTADO",
+            ig_ready: "< PRONTO > [F8]",
+            ig_empty: "< VAZIO >",
+            ig_slot: "MUDAR RANHURA ATIVA",
+            ig_reset: "REINICIAR CONSOLA",
+            ig_to_hub: "VOLTAR AO MENU PRINCIPAL",
+        },
+        Language::Es => UiTexts {
+            cat_all: "TODOS",
+            cat_fav: "* FAVORITOS",
+            cat_rec: "RECIENTES",
+            open_game_pad: "ABRIR JUEGO",
+            open_game_kb: "> PULSA ENTER <",
+            empty_roms_title: "CARPETA 'roms' LISTA!",
+            empty_roms_sub1: "Coloca tus juegos .nes en la carpeta 'roms'",
+            empty_roms_sub2: "o pulsa F1 / (Y) para buscar otra carpeta",
+            no_match_title: "NINGUN JUEGO ENCONTRADO",
+            no_match_sub: "Pulsa X / F2 o LT para cambiar el filtro",
+            search_prompt: "BUSCAR JUEGO",
+            foot_az: "A-Z",
+            foot_tab: "FILTRO",
+            foot_fav: "FAV",
+            foot_search: "BUSCAR",
+            foot_folder: "CARPETA",
+            foot_menu: "MENU",
+            foot_quit: "SALIR",
+            foot_kb_hub: "PGUP/DN: A-Z   TAB: FILTRO   F: FAV   F2: BUSCAR   F1: CARPETA   F3: MENU",
+            tabs_hub: ["1.VIDEO", "2.AUDIO", "3.SISTEMA", "4.MANDO"],
+            tabs_ingame: ["1.PARTIDA", "2.VIDEO", "3.AUDIO"],
+            lbl_display_mode: "MODO DE PANTALLA",
+            val_windowed: "< VENTANA (1024x576) >",
+            val_borderless: "< SIN BORDES >",
+            val_fullscreen: "< PANTALLA COMPLETA >",
+            lbl_aspect: "FORMATO DE PANTALLA",
+            lbl_scanlines: "EFECTO DE PANTALLA",
+            lbl_sprite_limit: "LIMITE 8 SPRITES",
+            val_on: "< ACTIVADO >",
+            val_off: "< DESACTIVADO >",
+            val_original: "< ORIGINAL (FLICKER) >",
+            val_nolimit: "< SIN LIMITE >",
+            lbl_volume: "VOLUMEN GENERAL",
+            lbl_mute: "SILENCIAR AUDIO",
+            lbl_save_slot: "RANURA ACTIVA",
+            lbl_turbo: "VELOCIDAD TURBO",
+            lbl_language: "IDIOMA DEL SISTEMA",
+            lbl_quit_emu: "SALIR DEL EMULADOR",
+            val_quit_now: "[ CERRAR AHORA ]",
+            lbl_device: "DISPOSITIVO",
+            val_pad_conn: "MANDO XBOX (CONECTADO)",
+            val_kb_usb: "TECLADO ESTANDAR (USB)",
+            lbl_buttons: "BOTON A / B",
+            lbl_rew_turbo: "REBOBINAR / TURBO",
+            menu_tabs: "PESTANAS",
+            menu_adjust: "AJUSTAR",
+            menu_confirm: "CONFIRMAR",
+            menu_close: "CERRAR",
+            stats_header: "ESTADISTICAS DEL JUEGO",
+            stats_time: "TIEMPO JUGADO",
+            stats_plays: "VECES INICIADO",
+            stats_fav_yes: "ESTADO: * FAVORITO",
+            stats_fav_no: "ESTADO: EN BIBLIOTECA",
+            detail_btns: ["JUGAR", "REINICIAR", "VOLVER"],
+            ig_resume: "CONTINUAR PARTIDA",
+            ig_save: "GUARDAR ESTADO",
+            ig_load: "CARGAR ESTADO",
+            ig_ready: "< LISTO > [F8]",
+            ig_empty: "< VACIO >",
+            ig_slot: "CAMBIAR RANURA",
+            ig_reset: "REINICIAR CONSOLA",
+            ig_to_hub: "SALIR AL MENU ARCADE",
+        },
+        Language::En => UiTexts {
+            cat_all: "ALL GAMES",
+            cat_fav: "* FAVORITES",
+            cat_rec: "RECENTS",
+            open_game_pad: "OPEN GAME",
+            open_game_kb: "> PRESS ENTER <",
+            empty_roms_title: "'roms' FOLDER READY!",
+            empty_roms_sub1: "Place your .nes games inside the 'roms' folder",
+            empty_roms_sub2: "or press F1 / (Y) to select another folder",
+            no_match_title: "NO GAMES FOUND",
+            no_match_sub: "Press X / F2 or LT to change the filter",
+            search_prompt: "SEARCH GAME",
+            foot_az: "A-Z",
+            foot_tab: "FILTER",
+            foot_fav: "FAV",
+            foot_search: "SEARCH",
+            foot_folder: "FOLDER",
+            foot_menu: "MENU",
+            foot_quit: "QUIT",
+            foot_kb_hub: "PGUP/DN: A-Z   TAB: FILTER   F: FAV   F2: SEARCH   F1: FOLDER   F3: MENU",
+            tabs_hub: ["1.VIDEO", "2.AUDIO", "3.SYSTEM", "4.GAMEPAD"],
+            tabs_ingame: ["1.GAME", "2.VIDEO", "3.AUDIO"],
+            lbl_display_mode: "DISPLAY MODE",
+            val_windowed: "< WINDOWED (1024x576) >",
+            val_borderless: "< BORDERLESS >",
+            val_fullscreen: "< FULLSCREEN >",
+            lbl_aspect: "ASPECT RATIO",
+            lbl_scanlines: "SCREEN EFFECT",
+            lbl_sprite_limit: "8 SPRITE LIMIT",
+            val_on: "< ENABLED >",
+            val_off: "< DISABLED >",
+            val_original: "< ORIGINAL (FLICKER) >",
+            val_nolimit: "< NO LIMIT >",
+            lbl_volume: "MASTER VOLUME",
+            lbl_mute: "MUTE AUDIO",
+            lbl_save_slot: "ACTIVE SAVE SLOT",
+            lbl_turbo: "TURBO SPEED",
+            lbl_language: "SYSTEM LANGUAGE",
+            lbl_quit_emu: "QUIT EMULATOR",
+            val_quit_now: "[ EXIT NOW ]",
+            lbl_device: "INPUT DEVICE",
+            val_pad_conn: "XBOX CONTROLLER (READY)",
+            val_kb_usb: "STANDARD KEYBOARD (USB)",
+            lbl_buttons: "BUTTON A / B",
+            lbl_rew_turbo: "REWIND / TURBO",
+            menu_tabs: "TABS",
+            menu_adjust: "CHANGE",
+            menu_confirm: "CONFIRM",
+            menu_close: "CLOSE",
+            stats_header: "PLAYER STATISTICS",
+            stats_time: "PLAY TIME",
+            stats_plays: "TIMES PLAYED",
+            stats_fav_yes: "STATUS: * FAVORITE",
+            stats_fav_no: "STATUS: IN LIBRARY",
+            detail_btns: ["PLAY", "RESET", "BACK"],
+            ig_resume: "RESUME GAME",
+            ig_save: "SAVE STATE",
+            ig_load: "LOAD STATE",
+            ig_ready: "< READY > [F8]",
+            ig_empty: "< EMPTY >",
+            ig_slot: "CHANGE SAVE SLOT",
+            ig_reset: "RESET CONSOLE",
+            ig_to_hub: "QUIT TO ARCADE HUB",
+        },
+    }
+}
+
 #[derive(Clone)]
 pub struct EmulatorSettings {
-    // VÍDEO
-    pub aspect_mode: u8, // 0 = 4:3, 1 = Ambient, 2 = Zoom, 3 = Esticado
-    pub crt_scanlines: bool,
+    pub aspect_mode: u8,
+    pub crt_mode: u8,
     pub sprite_limit: bool,
-    pub display_mode: DisplayMode, // <-- NOVO: Modo de Tela
-
-    // ÁUDIO
+    pub display_mode: DisplayMode,
     pub volume: f32,
     pub mute_all: bool,
-
-    // SISTEMA
     pub active_save_slot: usize,
     pub turbo_multiplier: usize,
+    pub language: Language,
+    pub welcome_completed: bool, // Se false, mostra a Tela de Boas-Vindas!
 }
 
 impl Default for EmulatorSettings {
     fn default() -> Self {
         Self {
             aspect_mode: 1,
-            crt_scanlines: false,
+            crt_mode: 3,
             sprite_limit: true,
             display_mode: DisplayMode::Windowed,
             volume: 0.8,
             mute_all: false,
             active_save_slot: 1,
             turbo_multiplier: 2,
+            language: Language::PtBr,
+            welcome_completed: false,
         }
     }
 }
@@ -232,22 +603,34 @@ impl EmulatorSettings {
     fn load() -> Self {
         if let Ok(bytes) = fs::read(".emulator_settings.bin") {
             if bytes.len() >= 8 {
-                let aspect_mode = if bytes.len() >= 9 && bytes[8] == 2 {
+                let aspect_mode = if bytes.len() >= 9 && bytes[8] >= 2 {
                     bytes[1] % 4
                 } else if bytes[1] != 0 {
-                    0 // Compatibilidade com o formato antigo: true significava 4:3
+                    0
                 } else {
-                    3 // Compatibilidade com o formato antigo: false significava 16:9 esticado
+                    3
+                };
+                let language = if bytes.len() >= 11 && bytes[8] == 3 {
+                    Language::from_u8(bytes[9])
+                } else {
+                    Language::PtBr
+                };
+                let welcome_completed = if bytes.len() >= 11 && bytes[8] == 3 {
+                    bytes[10] != 0
+                } else {
+                    false
                 };
                 return Self {
                     display_mode: DisplayMode::from_u8(bytes[0]),
                     aspect_mode,
-                    crt_scanlines: bytes[2] != 0,
+                    crt_mode: bytes[2] % 4,
                     sprite_limit: bytes[3] != 0,
                     volume: (bytes[4] as f32 / 100.0).clamp(0.0, 1.0),
                     mute_all: bytes[5] != 0,
                     active_save_slot: (bytes[6] as usize).clamp(1, 3),
                     turbo_multiplier: (bytes[7] as usize).clamp(2, 4),
+                    language,
+                    welcome_completed,
                 };
             }
         }
@@ -258,23 +641,54 @@ impl EmulatorSettings {
         let bytes = [
             self.display_mode as u8,
             self.aspect_mode % 4,
-            self.crt_scanlines as u8,
+            self.crt_mode % 4,
             self.sprite_limit as u8,
             (self.volume * 100.0).round() as u8,
             self.mute_all as u8,
             self.active_save_slot as u8,
             self.turbo_multiplier as u8,
-            2, // versão do formato de configurações
+            3, // Versão 3 com suporte a idioma e boas-vindas
+            self.language as u8,
+            self.welcome_completed as u8,
         ];
         let _ = fs::write(".emulator_settings.bin", bytes);
     }
 
     fn aspect_label(&self) -> &'static str {
-        match self.aspect_mode {
-            0 => "< 4:3 CLASSICO >",
-            1 => "< 16:9 AMBIENT >",
-            2 => "< 16:9 ZOOM >",
-            _ => "< 16:9 ESTICADO >",
+        match (self.language, self.aspect_mode) {
+            (Language::En, 0) => "< 4:3 CLASSIC >",
+            (Language::En, 1) => "< 16:9 AMBIENT >",
+            (Language::En, 2) => "< 16:9 ZOOM >",
+            (Language::En, _) => "< 16:9 STRETCHED >",
+            (Language::Es, 0) => "< 4:3 CLASICO >",
+            (Language::Es, 1) => "< 16:9 AMBIENT >",
+            (Language::Es, 2) => "< 16:9 ZOOM >",
+            (Language::Es, _) => "< 16:9 ESTIRADO >",
+            (_, 0) => "< 4:3 CLASSICO >",
+            (_, 1) => "< 16:9 AMBIENT >",
+            (_, 2) => "< 16:9 ZOOM >",
+            (_, _) => "< 16:9 ESTICADO >",
+        }
+    }
+
+    pub fn crt_label(&self) -> &'static str {
+        match (self.language, self.crt_mode % 4) {
+            (Language::En, 0) => "< OFF (PIXEL) >",
+            (Language::En, 1) => "< ARCADE CRT >",
+            (Language::En, 2) => "< CURVED TUBE TV >",
+            (Language::En, _) => "< OLD RF TV (NOISE) >",
+            (Language::Es, 0) => "< APAGADO (PIXEL) >",
+            (Language::Es, 1) => "< CRT ARCADE >",
+            (Language::Es, 2) => "< TV DE TUBO (CURVA) >",
+            (Language::Es, _) => "< TV ANTIGUA RF (RUIDO) >",
+            (Language::PtPt, 0) => "< DESATIVADO (PIXEL) >",
+            (Language::PtPt, 1) => "< CRT ARCADE >",
+            (Language::PtPt, 2) => "< TV DE TUBO (CURVA) >",
+            (Language::PtPt, _) => "< TV ANTIGA RF (RUIDO) >",
+            (Language::PtBr, 0) => "< DESATIVADO (PIXEL) >",
+            (Language::PtBr, 1) => "< CRT ARCADE >",
+            (Language::PtBr, 2) => "< TV DE TUBO (CURVA) >",
+            (Language::PtBr, _) => "< TV ANTIGA RF (CHIADO) >",
         }
     }
 }
@@ -3361,9 +3775,6 @@ impl HubCategory {
     fn next(self) -> Self {
         match self { Self::All => Self::Favorites, Self::Favorites => Self::Recents, Self::Recents => Self::All }
     }
-    fn label(self) -> &'static str {
-        match self { Self::All => "TODOS", Self::Favorites => "* FAVORITOS", Self::Recents => "RECENTES" }
-    }
 }
 
 fn rebuild_filtered_list(roms: &[RomEntry], category: HubCategory, search_query: &str) -> Vec<usize> {
@@ -3624,6 +4035,51 @@ fn draw_rect(buffer: &mut [u32], width: usize, height: usize, x: usize, y: usize
 // ============================================================================
 // DESENHO DE BOTÕES DE GAMEPAD ESTILO XBOX (A, B, X, Y, LB, RB, D-PAD)
 // ============================================================================
+fn get_local_time_string() -> String {
+    #[cfg(target_os = "windows")]
+    unsafe {
+        #[repr(C)]
+        #[derive(Default)]
+        struct WinSystemTime {
+            year: u16,
+            month: u16,
+            day_of_week: u16,
+            day: u16,
+            hour: u16,
+            minute: u16,
+            second: u16,
+            milliseconds: u16,
+        }
+        extern "system" {
+            fn GetLocalTime(lp_system_time: *mut WinSystemTime);
+        }
+        let mut st = WinSystemTime::default();
+        GetLocalTime(&mut st);
+        return format!("{:02}:{:02}", st.hour, st.minute);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let total_secs = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        format!("{:02}:{:02}", (total_secs / 3600) % 24, (total_secs / 60) % 60)
+    }
+}
+
+// ============================================================================
+
+fn badge_pixel_width(label: &str) -> usize {
+    (label.len() * 6 + 6).max(14)
+}
+
+fn draw_text_centered_in_box(buffer: &mut [u32], box_x: usize, box_w: usize, y: usize, text: &str, color: u32) {
+    let text_w = text.len() * 6;
+    let tx = box_x + box_w.saturating_sub(text_w) / 2;
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, text, tx, y, color);
+}
+
 fn draw_button_badge(
     buffer: &mut [u32],
     canvas_w: usize,
@@ -3634,10 +4090,9 @@ fn draw_button_badge(
     bg_color: u32,
     text_color: u32,
 ) {
-    let pad_w = (label.len() * 6 + 6).max(12);
+    let pad_w = badge_pixel_width(label);
     let pad_h = 11;
 
-    // Fundo do botão com cantos chanfrados (aparência arredondada de badge)
     for row in 0..pad_h {
         let py = y + row;
         if py >= canvas_h { continue; }
@@ -3645,7 +4100,6 @@ fn draw_button_badge(
             let px = x + col;
             if px >= canvas_w { continue; }
 
-            // Recorta os 4 cantos para dar formato de pílula/círculo
             let is_corner = (row == 0 || row == pad_h - 1) && (col == 0 || col == pad_w - 1);
             if !is_corner {
                 buffer[py * canvas_w + px] = bg_color;
@@ -3653,9 +4107,67 @@ fn draw_button_badge(
         }
     }
 
-    // Texto centralizado dentro do botão
-    let text_x = x + (pad_w.saturating_sub(label.len() * 6)) / 2;
+    let text_w = label.len() * 6;
+    let text_x = x + pad_w.saturating_sub(text_w) / 2;
     draw_text(buffer, canvas_w, canvas_h, label, text_x, y + 2, text_color);
+}
+
+// Centraliza perfeitamente um [BADGE] + TEXTO dentro de qualquer caixa de botão
+fn draw_centered_button_with_badge(
+    buffer: &mut [u32],
+    box_x: usize,
+    box_y: usize,
+    box_w: usize,
+    box_h: usize,
+    badge_label: &str,
+    badge_bg: u32,
+    badge_fg: u32,
+    text: &str,
+    text_color: u32,
+) {
+    let bw = badge_pixel_width(badge_label);
+    let gap = 5;
+    let tw = text.len() * 6;
+    let total_w = bw + gap + tw;
+
+    let start_x = box_x + box_w.saturating_sub(total_w) / 2;
+    let badge_y = box_y + box_h.saturating_sub(11) / 2;
+    let text_y = box_y + box_h.saturating_sub(7) / 2;
+
+    draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, badge_label, start_x, badge_y, badge_bg, badge_fg);
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, text, start_x + bw + gap, text_y, text_color);
+}
+
+// Mede e centraliza matematicamente uma fileira inteira de (Badge, Cor, Texto) sem nunca sobrepor!
+fn draw_centered_badge_row(
+    buffer: &mut [u32],
+    area_x: usize,
+    area_w: usize,
+    y: usize,
+    item_gap: usize,
+    items: &[(&str, u32, u32, &str)],
+) {
+    if items.is_empty() {
+        return;
+    }
+
+    let inner_gap = 4;
+    let mut total_w = 0usize;
+    for (i, &(badge, _, _, label)) in items.iter().enumerate() {
+        total_w += badge_pixel_width(badge) + inner_gap + (label.len() * 6);
+        if i + 1 < items.len() {
+            total_w += item_gap;
+        }
+    }
+
+    let mut cur_x = area_x + area_w.saturating_sub(total_w) / 2;
+    for &(badge, bg, fg, label) in items {
+        let bw = badge_pixel_width(badge);
+        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, badge, cur_x, y, bg, fg);
+        cur_x += bw + inner_gap;
+        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, label, cur_x, y + 2, 0x90A4AE);
+        cur_x += (label.len() * 6) + item_gap;
+    }
 }
 
 fn draw_rounded_card(
@@ -3672,15 +4184,12 @@ fn draw_rounded_card(
 
     for y in 0..card_h {
         let dy = card_y + y as i32;
-        // Limite vertical corrigido para CANVAS_HEIGHT (288)
         if dy < 0 || dy >= CANVAS_HEIGHT as i32 { continue; }
 
         for x in 0..card_w {
             let dx = card_x + x as i32;
-            // Limite horizontal corrigido para CANVAS_WIDTH (512)
             if dx < 0 || dx >= CANVAS_WIDTH as i32 { continue; }
 
-            // Borda e destaque de foco
             let is_border = x == 0 || x == card_w - 1 || y == 0 || y == card_h - 1;
             let is_inner = is_focused && (x == 1 || x == card_w - 2 || y == 1 || y == card_h - 2);
 
@@ -3695,7 +4204,6 @@ fn draw_rounded_card(
                 if is_focused {
                     pixel
                 } else {
-                    // Escurece suavemente os cards laterais
                     let r = (((pixel >> 16) & 0xFF) * 4) / 10;
                     let g = (((pixel >> 8) & 0xFF) * 4) / 10;
                     let b = ((pixel & 0xFF) * 4) / 10;
@@ -3703,14 +4211,13 @@ fn draw_rounded_card(
                 }
             };
 
-            // Índice de memória corrigido para largura 512 (CANVAS_WIDTH)
             buffer[(dy as usize) * CANVAS_WIDTH + (dx as usize)] = color;
         }
     }
 }
 
 // ============================================================================
-// RENDERIZAÇÃO DO HUB ARCADE EM ALTA RESOLUÇÃO (512x288)
+// RENDERIZAÇÃO DO HUB ARCADE (100% SIMÉTRICO E CENTRALIZADO)
 // ============================================================================
 const VIRTUAL_KB_CHARS: &[&str] = &[
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
@@ -3718,18 +4225,129 @@ const VIRTUAL_KB_CHARS: &[&str] = &[
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "ESPACO", "APAGAR", "LIMPAR", "OK",
 ];
 
+fn render_welcome_screen(
+    buffer: &mut [u32],
+    selected_lang: Language,
+    gamepad_connected: bool,
+) {
+    // Fundo escuro elegante
+    for y in 0..CANVAS_HEIGHT {
+        let factor = y as f32 / CANVAS_HEIGHT as f32;
+        let r = (10.0 + 8.0 * (1.0 - factor)) as u32;
+        let g = (15.0 + 12.0 * (1.0 - factor)) as u32;
+        let b = (26.0 + 20.0 * (1.0 - factor)) as u32;
+        let col = (r << 16) | (g << 8) | b;
+        for x in 0..CANVAS_WIDTH {
+            buffer[y * CANVAS_WIDTH + x] = col;
+        }
+    }
+
+    for y in (0..CANVAS_HEIGHT).step_by(16) {
+        for x in (0..CANVAS_WIDTH).step_by(16) {
+            buffer[y * CANVAS_WIDTH + x] = 0x1E283A;
+        }
+    }
+
+    let mw = 360;
+    let mh = 224;
+    let mx = (CANVAS_WIDTH - mw) / 2;
+    let my = (CANVAS_HEIGHT - mh) / 2;
+
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx - 1, my - 1, mw + 2, mh + 2, 0x00E5FF);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, mh, 0x0B101B);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, 30, 0x141F33);
+
+    let (title, sub, btn_txt) = match selected_lang {
+        Language::PtBr => (
+            "BEM-VINDO AO ARCADE NES",
+            "ESCOLHA O IDIOMA DO SEU EMULADOR",
+            "CONFIRMAR E INICIAR",
+        ),
+        Language::PtPt => (
+            "BEM-VINDO AO ARCADE NES",
+            "SELECIONE O IDIOMA DO EMULADOR",
+            "CONFIRMAR E INICIAR",
+        ),
+        Language::Es => (
+            "BIENVENIDO A ARCADE NES",
+            "SELECCIONA EL IDIOMA DEL SISTEMA",
+            "CONFIRMAR E INICIAR",
+        ),
+        Language::En => (
+            "WELCOME TO ARCADE NES",
+            "SELECT YOUR SYSTEM LANGUAGE",
+            "CONFIRM AND START",
+        ),
+    };
+
+    draw_text_centered_in_box(buffer, mx, mw, my + 11, title, 0x00E5FF);
+    draw_text_centered_in_box(buffer, mx, mw, my + 40, sub, 0xCFD8DC);
+
+    let langs = [
+        (Language::PtBr, "PORTUGUES (BRASIL) - PADRAO"),
+        (Language::PtPt, "PORTUGUES (PORTUGAL)"),
+        (Language::Es, "ESPANOL"),
+        (Language::En, "ENGLISH"),
+    ];
+
+    for (i, &(l_enum, l_name)) in langs.iter().enumerate() {
+        let ry = my + 62 + i * 28;
+        let is_sel = selected_lang == l_enum;
+
+        draw_rect(
+            buffer,
+            CANVAS_WIDTH,
+            CANVAS_HEIGHT,
+            mx + 30,
+            ry,
+            mw - 60,
+            22,
+            if is_sel { 0x00E5FF } else { 0x152033 },
+        );
+        draw_text_centered_in_box(
+            buffer,
+            mx + 30,
+            mw - 60,
+            ry + 8,
+            l_name,
+            if is_sel { 0x000000 } else { 0xFFFFFF },
+        );
+    }
+
+    let foot_y = my + mh - 24;
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, foot_y - 6, mw, 1, 0x1E2B42);
+    if gamepad_connected {
+        draw_centered_button_with_badge(
+            buffer,
+            mx,
+            foot_y - 2,
+            mw,
+            18,
+            "A",
+            0x2E7D32,
+            0xFFFFFF,
+            btn_txt,
+            0x00E5FF,
+        );
+    } else {
+        let kb_str = format!("ENTER: {}", btn_txt);
+        draw_text_centered_in_box(buffer, mx, mw, foot_y + 4, &kb_str, 0x00E5FF);
+    }
+}
+
 fn render_arcade_hub_frame(
     buffer: &mut [u32],
     roms: &[RomEntry],
     filtered_indices: &[usize],
-    selected_pos: usize, // Posição dentro de filtered_indices
+    selected_pos: usize,
     category: HubCategory,
     gamepad_connected: bool,
-    in_settings_menu: bool,
+    settings: &EmulatorSettings,
     in_search_mode: bool,
     search_query: &str,
     vkb_cursor: usize,
 ) {
+    let txt = get_texts(settings.language);
     let active_theme = if !filtered_indices.is_empty() {
         roms[filtered_indices[selected_pos]].theme_color
     } else {
@@ -3757,38 +4375,45 @@ fn render_arcade_hub_frame(
         }
     }
 
-    // Barra Superior
+    // 1. BARRA SUPERIOR
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0, CANVAS_WIDTH, 24, 0x0C101A);
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 10, 5, 5, 5, 0x00E5FF);
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 17, 5, 5, 5, 0x00E5FF);
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 10, 12, 5, 5, 0x00E5FF);
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 17, 12, 5, 5, 0x00E5FF);
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "ARCADE LIBRARY", 28, 8, 0xFFFFFF);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 12, 5, 5, 5, 0x00E5FF);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 19, 5, 5, 5, 0x00E5FF);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 12, 12, 5, 5, 0x00E5FF);
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 19, 12, 5, 5, 0x00E5FF);
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "ARCADE LIBRARY", 30, 8, 0xFFFFFF);
 
-    // Contador de Jogos e Filtro de Busca ativo no topo
-    let count_str = if search_query.is_empty() {
-        format!("{}: {}/{}", category.label(), if filtered_indices.is_empty() { 0 } else { selected_pos + 1 }, filtered_indices.len())
-    } else {
-        format!("{} '{}': {}/{}", category.label(), search_query, if filtered_indices.is_empty() { 0 } else { selected_pos + 1 }, filtered_indices.len())
+    let cat_label = match category {
+        HubCategory::All => txt.cat_all,
+        HubCategory::Favorites => txt.cat_fav,
+        HubCategory::Recents => txt.cat_rec,
     };
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &count_str, 145, 8, 0x00E5FF);
+
+    let count_str = if search_query.is_empty() {
+        format!(
+            "{}: {}/{}",
+            cat_label,
+            if filtered_indices.is_empty() { 0 } else { selected_pos + 1 },
+            filtered_indices.len()
+        )
+    } else {
+        format!(
+            "{} '{}': {}/{}",
+            cat_label,
+            search_query,
+            if filtered_indices.is_empty() { 0 } else { selected_pos + 1 },
+            filtered_indices.len()
+        )
+    };
+    draw_text_centered_in_box(buffer, 0, CANVAS_WIDTH, 8, &count_str, 0x00E5FF);
 
     let pad_color = if gamepad_connected { 0x81C784 } else { 0x455A64 };
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "XBOX PAD", 325, 8, pad_color);
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "XBOX PAD", 404, 8, pad_color);
 
-    let total_secs = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
-    let time_str = format!("{:02}:{:02}", (total_secs / 3600) % 24, (total_secs / 60) % 60);
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &time_str, 390, 8, 0xCFD8DC);
+    let time_str = get_local_time_string();
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &time_str, 468, 8, 0xFFFFFF);
 
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 430, 4, 75, 16, if in_settings_menu { 0x283852 } else { 0x182030 });
-    if gamepad_connected {
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "START", 434, 6, 0x1565C0, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "OPCOES", 474, 8, 0xFFFFFF);
-    } else {
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "F3:MENU", 445, 8, 0x90A4AE);
-    }
-
-    // BARRA ALFABÉTICA DE SALTO RÁPIDO (# A B C ... Z)
+    // 2. BARRA ALFABÉTICA CENTRALIZADA
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 0, 24, CANVAS_WIDTH, 16, 0x111726);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 0, 40, CANVAS_WIDTH, 1, 0x1E273A);
 
@@ -3799,53 +4424,53 @@ fn render_arcade_hub_frame(
     };
 
     let alphabet = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let start_alpha_x = 34;
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LB<", 8, 28, 0x607D8B);
+    let start_alpha_x = 42;
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LB<", 10, 29, 0x607D8B);
     for (i, ch) in alphabet.chars().enumerate() {
-        let ax = start_alpha_x + i * 16;
+        let box_x = start_alpha_x + i * 16;
         let is_cur = ch == current_letter;
         if is_cur {
-            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, ax - 3, 25, 11, 13, 0x00E5FF);
+            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, box_x - 3, 26, 11, 12, 0x00E5FF);
         }
         let s = ch.to_string();
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &s, ax, 28, if is_cur { 0x000000 } else { 0x78909C });
+        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &s, box_x, 29, if is_cur { 0x000000 } else { 0x78909C });
     }
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, ">RB", 482, 28, 0x607D8B);
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, ">RB", 484, 29, 0x607D8B);
 
     if filtered_indices.is_empty() {
-        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 96, 95, 320, 100, 0x151B26);
-        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 96, 95, 320, 2, 0x00E5FF);
+        let mw = 320;
+        let mx = (CANVAS_WIDTH - mw) / 2;
+        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, 95, mw, 100, 0x151B26);
+        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, 95, mw, 2, 0x00E5FF);
         if roms.is_empty() {
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "PASTA 'roms' PRONTA!", 195, 115, 0x00E5FF);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "Coloque seus jogos .nes na pasta 'roms'", 135, 140, 0xFFFFFF);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "ou pressione F1 / (Y) para outra pasta", 138, 160, 0x90A4AE);
+            draw_text_centered_in_box(buffer, mx, mw, 115, txt.empty_roms_title, 0x00E5FF);
+            draw_text_centered_in_box(buffer, mx, mw, 140, txt.empty_roms_sub1, 0xFFFFFF);
+            draw_text_centered_in_box(buffer, mx, mw, 160, txt.empty_roms_sub2, 0x90A4AE);
         } else {
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "NENHUM JOGO COM ESSE NOME", 178, 125, 0xFF5252);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "Aperte X / F2 para limpar a busca", 155, 150, 0xCFD8DC);
+            draw_text_centered_in_box(buffer, mx, mw, 125, txt.no_match_title, 0xFF5252);
+            draw_text_centered_in_box(buffer, mx, mw, 150, txt.no_match_sub, 0xCFD8DC);
         }
     } else {
-        // CARROSSEL DE CARDS
         let center_card_w = 100;
         let center_card_h = 140;
         let center_card_x = (CANVAS_WIDTH as i32 - center_card_w as i32) / 2;
-        let center_card_y = 46;
+        let center_card_y = 48;
 
         let side_card_w = 76;
         let side_card_h = 108;
-        let side_card_y = 62;
+        let side_card_y = 64;
 
         let total = filtered_indices.len() as i32;
         let sel = selected_pos as i32;
 
-        for offset in [-3, -2, -1, 1, 2, 3] {
+        for offset in [-2, -1, 1, 2] {
             let pos = sel + offset;
             if pos >= 0 && pos < total {
                 let rom_idx = filtered_indices[pos as usize];
-                let spacing = 96;
                 let card_x = if offset < 0 {
-                    center_card_x + offset * spacing - 6
+                    center_card_x - 16 - (side_card_w as i32) + (offset + 1) * 90
                 } else {
-                    center_card_x + center_card_w as i32 + (offset - 1) * spacing + 18
+                    center_card_x + (center_card_w as i32) + 16 + (offset - 1) * 90
                 };
                 draw_rounded_card(
                     buffer,
@@ -3873,38 +4498,36 @@ fn render_arcade_hub_frame(
         );
         if sel_rom.stats.is_favorite {
             draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, center_card_x as usize + 58, center_card_y as usize + 6, 36, 12, 0xFFD54F);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "*FAV", center_card_x as usize + 64, center_card_y as usize + 9, 0x000000);
+            draw_text_centered_in_box(buffer, center_card_x as usize + 58, 36, center_card_y as usize + 9, "*FAV", 0x000000);
         }
 
         let display_title = sanitize_rom_name_for_scraping(&sel_rom.name);
-        let title_x = (CANVAS_WIDTH / 2).saturating_sub((display_title.len() * 6) / 2);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &display_title, title_x, 195, 0xFFFFFF);
+        draw_text_centered_in_box(buffer, 0, CANVAS_WIDTH, 202, &display_title, 0xFFFFFF);
 
-        let info_str = format!(
-            "MAPPER {} | {}KB PRG | {}KB CHR | {}",
-            sel_rom.mapper,
-            sel_rom.prg_kb,
-            sel_rom.chr_kb,
-            if sel_rom.has_battery { "BATERIA (SRAM)" } else { "STANDARD" }
-        );
-        let info_x = (CANVAS_WIDTH / 2).saturating_sub((info_str.len() * 6) / 2);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &info_str, info_x, 212, 0x00E5FF);
-
-        let btn_w = 160;
+        let btn_w = 156;
         let btn_x = (CANVAS_WIDTH - btn_w) / 2;
-        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 232, btn_w, 22, 0x1A2538);
-        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 232, btn_w, 1, 0x00E5FF);
-        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 253, btn_w, 1, 0x00E5FF);
+        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 224, btn_w, 22, 0x1A2538);
+        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 224, btn_w, 1, 0x00E5FF);
+        draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, btn_x, 245, btn_w, 1, 0x00E5FF);
 
         if gamepad_connected {
-            draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", btn_x + 30, 237, 0x2E7D32, 0xFFFFFF);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "DETALHES", btn_x + 48, 239, 0xFFFFFF);
+            draw_centered_button_with_badge(
+                buffer,
+                btn_x,
+                224,
+                btn_w,
+                22,
+                "A",
+                0x2E7D32,
+                0xFFFFFF,
+                txt.open_game_pad,
+                0xFFFFFF,
+            );
         } else {
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "> PRESSIONE ENTER <", btn_x + 23, 239, 0xFFFFFF);
+            draw_text_centered_in_box(buffer, btn_x, btn_w, 232, txt.open_game_kb, 0xFFFFFF);
         }
     }
 
-    // MODAL DE BUSCA (TECLADO FÍSICO + TECLADO VIRTUAL PARA CONTROLE)
     if in_search_mode {
         let mw = 390;
         let mh = 135;
@@ -3915,15 +4538,15 @@ fn render_arcade_hub_frame(
         draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, mh, 0x0B101B);
         draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, 28, 0x141E30);
 
-        let prompt = format!("BUSCAR JOGO: {}_", search_query);
+        let prompt = format!("{}: {}_", txt.search_prompt, search_query);
         draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &prompt, mx + 14, my + 10, 0x00E5FF);
 
-        // Grade do Teclado Virtual (10 colunas x 4 linhas)
         let cols = 10;
+        let grid_start_x = mx + (mw - 367) / 2;
         for (i, &key_label) in VIRTUAL_KB_CHARS.iter().enumerate() {
             let r = i / cols;
             let c = i % cols;
-            let kx = mx + 12 + c * 37;
+            let kx = grid_start_x + c * 37;
             let ky = my + 38 + r * 22;
             let kw = 34;
             let kh = 18;
@@ -3945,71 +4568,56 @@ fn render_arcade_hub_frame(
                 "LIMPAR" => "CLR",
                 other => other,
             };
-            let tx = kx + (kw.saturating_sub(short_k.len() * 6)) / 2;
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, short_k, tx, ky + 5, if is_sel { 0x000000 } else { 0xFFFFFF });
+            draw_text_centered_in_box(buffer, kx, kw, ky + 5, short_k, if is_sel { 0x000000 } else { 0xFFFFFF });
         }
     }
 
-    // Rodapé com os novos atalhos de Salto A-Z e Busca
+    // RODAPÉ AUTO-CENTRALIZADO (Com botão B = SAIR rápido!)
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 0, 268, CANVAS_WIDTH, 20, 0x0A0D14);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, 0, 268, CANVAS_WIDTH, 1, 0x1A2234);
 
     if gamepad_connected {
-        let mut cx = 10;
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LB/RB", cx, 272, 0x37474F, 0xFFFFFF);
-        cx += 38;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LETRA A-Z", cx, 274, 0x90A4AE);
-        cx += 64;
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "X", cx, 272, 0x1565C0, 0xFFFFFF);
-        cx += 16;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "BUSCAR", cx, 274, 0x90A4AE);
-        cx += 48;
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", cx, 272, 0x2E7D32, 0xFFFFFF);
-        cx += 16;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "DETALHES", cx, 274, 0x90A4AE);
-        cx += 42;
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "Y", cx, 272, 0xF57F17, 0xFFFFFF);
-        cx += 16;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "PASTA", cx, 274, 0x90A4AE);
-        cx += 42;
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "START", cx, 272, 0x1565C0, 0xFFFFFF);
-        cx += 38;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "MENU", cx, 274, 0x90A4AE);
-    } else {
-        draw_text(
+        draw_centered_badge_row(
             buffer,
+            0,
             CANVAS_WIDTH,
-            CANVAS_HEIGHT,
-            "PGUP/PGDN: LETRA A-Z   ENTER: DETALHES   F1: PASTA   F3: MENU",
-            28,
-            274,
+            273,
+            9,
+            &[
+                ("LB/RB", 0x37474F, 0xFFFFFF, txt.foot_az),
+                ("LT", 0x37474F, 0xFFFFFF, txt.foot_tab),
+                ("SELECT", 0x37474F, 0xFFFFFF, txt.foot_fav),
+                ("X", 0x1565C0, 0xFFFFFF, txt.foot_search),
+                ("Y", 0xF57F17, 0xFFFFFF, txt.foot_folder),
+                ("START", 0x1565C0, 0xFFFFFF, txt.foot_menu),
+                ("B", 0xC62828, 0xFFFFFF, txt.foot_quit),
+            ],
+        );
+    } else {
+        draw_text_centered_in_box(
+            buffer,
+            0,
+            CANVAS_WIDTH,
+            275,
+            txt.foot_kb_hub,
             0x78909C,
         );
     }
 }
 
 fn roms_char(roms: &[RomEntry], filtered: &[usize], pos: usize) -> char {
-    filtered.get(pos)
-        .and_then(|&idx| roms.get(idx))
-        .map(|rom| rom.first_char)
-        .unwrap_or('#')
+    filtered.get(pos).and_then(|&idx| roms.get(idx)).map(|rom| rom.first_char).unwrap_or('#')
 }
 
-// ============================================================================
-// NOVO MENU DE OPÇÕES PROFISSIONAL COM ABAS (VÍDEO / ÁUDIO / SISTEMA)
-// ============================================================================
 fn render_advanced_settings_menu(
     buffer: &mut [u32],
     settings: &EmulatorSettings,
-    active_tab: usize,       // 0: VIDEO, 1: AUDIO, 2: SISTEMA, 3: CONTROLES
-    row_cursor: usize,       // Linha selecionada dentro da aba
+    active_tab: usize,
+    row_cursor: usize,
     gamepad_connected: bool,
 ) {
-    // 1. Escurecimento translúcido do fundo
+    let txt = get_texts(settings.language);
+
     for px in buffer.iter_mut() {
         let p = *px;
         let r = (((p >> 16) & 0xFF) * 2) / 10;
@@ -4023,18 +4631,15 @@ fn render_advanced_settings_menu(
     let mx = (CANVAS_WIDTH - mw) / 2;
     let my = (CANVAS_HEIGHT - mh) / 2;
 
-    // Moldura principal com borda ciano neon
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx - 1, my - 1, mw + 2, mh + 2, 0x00E5FF);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, mh, 0x0B0F19);
 
-    // Barra de Cabeçalho / Abas
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, 26, 0x131A29);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my + 26, mw, 1, 0x1E2B42);
 
-    let tabs = ["1.VIDEO", "2.AUDIO", "3.SISTEMA", "4.CONTROLE"];
-    let tab_w = mw / tabs.len();
+    let tab_w = mw / txt.tabs_hub.len();
 
-    for (t_idx, &t_name) in tabs.iter().enumerate() {
+    for (t_idx, &t_name) in txt.tabs_hub.iter().enumerate() {
         let tx = mx + t_idx * tab_w;
         let is_tab_sel = t_idx == active_tab;
 
@@ -4043,93 +4648,108 @@ fn render_advanced_settings_menu(
             draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, tx, my + 24, tab_w, 2, 0x00E5FF);
         }
         let tc = if is_tab_sel { 0x00E5FF } else { 0x607D8B };
-        let text_x = tx + (tab_w.saturating_sub(t_name.len() * 6)) / 2;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, t_name, text_x, my + 9, tc);
+        draw_text_centered_in_box(buffer, tx, tab_w, my + 10, t_name, tc);
     }
 
-    // Itens de cada Aba
     let items: Vec<(String, String)> = match active_tab {
         0 => vec![
-            ("MODO DE TELA".into(), match settings.display_mode {
-                DisplayMode::Windowed => "< JANELA (1024x576) >".into(),
-                DisplayMode::Borderless => "< SEM BORDAS >".into(),
-                DisplayMode::Fullscreen => "< TELA CHEIA >".into(),
+            (txt.lbl_display_mode.into(), match settings.display_mode {
+                DisplayMode::Windowed => txt.val_windowed.into(),
+                DisplayMode::Borderless => txt.val_borderless.into(),
+                DisplayMode::Fullscreen => txt.val_fullscreen.into(),
             }),
-            ("FORMATO DE TELA".into(), settings.aspect_label().into()),
-            ("FILTRO SCANLINES".into(), if settings.crt_scanlines { "< ATIVADO >".into() } else { "< DESATIVADO >".into() }),
-            ("LIMITE 8 SPRITES".into(), if settings.sprite_limit { "< ORIGINAL (FLICKER) >".into() } else { "< SEM LIMITE >".into() }),
+            (txt.lbl_aspect.into(), settings.aspect_label().into()),
+            (txt.lbl_scanlines.into(), settings.crt_label().into()),
+            (txt.lbl_sprite_limit.into(), if settings.sprite_limit { txt.val_original.into() } else { txt.val_nolimit.into() }),
         ],
         1 => vec![
-            ("VOLUME GERAL".into(), format!("< {}% >", (settings.volume * 100.0).round() as usize)),
-            ("MUTAR AUDIO (MUTE)".into(), if settings.mute_all { "< ATIVADO >".into() } else { "< DESATIVADO >".into() }),
+            (txt.lbl_volume.into(), format!("< {}% >", (settings.volume * 100.0).round() as usize)),
+            (txt.lbl_mute.into(), if settings.mute_all { txt.val_on.into() } else { txt.val_off.into() }),
         ],
         2 => vec![
-            ("SLOT SAVE ATIVO".into(), format!("< SLOT {} >", settings.active_save_slot)),
-            ("VELOCIDADE TURBO".into(), format!("< {}X >", settings.turbo_multiplier)),
-            ("REGIAO DO CONSOLE".into(), "< NTSC (60 HZ) >".into()),
+            (txt.lbl_save_slot.into(), format!("< SLOT {} >", settings.active_save_slot)),
+            (txt.lbl_turbo.into(), format!("< {}X >", settings.turbo_multiplier)),
+            (txt.lbl_language.into(), settings.language.selector_label().into()),
+            (txt.lbl_quit_emu.into(), txt.val_quit_now.into()),
         ],
         3 => vec![
-            ("DISPOSITIVO".into(), if gamepad_connected { "XBOX GAMEPAD (CONECTADO)".into() } else { "TECLADO PADRAO (USB)".into() }),
-            ("BOTAO A / B".into(), if gamepad_connected { "A = A / B = B".into() } else { "Z = A / X = B".into() }),
-            ("TURBO / MENU".into(), if gamepad_connected { "RB = TURBO / START = MENU".into() } else { "TAB = TURBO / ESC = MENU".into() }),
+            (txt.lbl_device.into(), if gamepad_connected { txt.val_pad_conn.into() } else { txt.val_kb_usb.into() }),
+            (txt.lbl_buttons.into(), if gamepad_connected { "A = A / B = B".into() } else { "Z = A / X = B".into() }),
+            (txt.lbl_rew_turbo.into(), if gamepad_connected { "LT = REWIND / RB = TURBO".into() } else { "BACKSPACE / TAB".into() }),
         ],
         _ => vec![],
     };
 
-    let start_y = my + 44;
+    let start_y = my + 42;
     for (i, (label, val)) in items.iter().enumerate() {
-        let iy = start_y + i * 30;
+        let iy = start_y + i * 28;
         let is_sel = i == row_cursor;
+        let is_quit_row = active_tab == 2 && i == 3;
 
         if is_sel {
-            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx + 12, iy - 4, mw - 24, 22, 0x16243D);
-            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx + 12, iy - 4, 3, 22, 0x00E5FF);
+            let sel_bg = if is_quit_row { 0x3A161E } else { 0x16243D };
+            let bar_col = if is_quit_row { 0xFF5252 } else { 0x00E5FF };
+            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx + 12, iy - 4, mw - 24, 22, sel_bg);
+            draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx + 12, iy - 4, 3, 22, bar_col);
         }
 
-        let l_color = if is_sel { 0xFFFFFF } else { 0x90A4AE };
-        let v_color = if is_sel { 0x00E5FF } else { 0xCFD8DC };
+        let l_color = if is_quit_row {
+            0xFF8A80
+        } else if is_sel {
+            0xFFFFFF
+        } else {
+            0x90A4AE
+        };
+        let v_color = if is_quit_row {
+            0xFF5252
+        } else if is_sel {
+            0x00E5FF
+        } else {
+            0xCFD8DC
+        };
 
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, label, mx + 24, iy + 3, l_color);
-        let val_x = mx + mw - 24 - (val.len() * 6);
+        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, label, mx + 22, iy + 3, l_color);
+        let val_x = mx + mw - 22 - (val.len() * 6);
         draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, val, val_x, iy + 3, v_color);
     }
 
-    // Rodapé de instruções do menu
-    let foot_y = my + mh - 20;
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, foot_y - 4, mw, 1, 0x1A253A);
+    let foot_y = my + mh - 18;
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, foot_y - 5, mw, 1, 0x1A253A);
 
     if gamepad_connected {
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LB/RB", mx + 14, foot_y, 0x37474F, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "ABAS", mx + 50, foot_y + 2, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "< >", mx + 88, foot_y, 0x37474F, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "AJUSTAR", mx + 116, foot_y + 2, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "B", mx + 180, foot_y, 0xC62828, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "FECHAR", mx + 196, foot_y + 2, 0x90A4AE);
-    } else {
-        draw_text(
+        draw_centered_badge_row(
             buffer,
-            CANVAS_WIDTH,
-            CANVAS_HEIGHT,
-            "1-4: ABAS   CIMA/BAIXO: ITENS   < >: ALTERAR   ESC: FECHAR",
-            mx + 18,
+            mx,
+            mw,
+            foot_y,
+            18,
+            &[
+                ("LB/RB", 0x37474F, 0xFFFFFF, txt.menu_tabs),
+                ("< >", 0x37474F, 0xFFFFFF, txt.menu_adjust),
+                ("B", 0xC62828, 0xFFFFFF, txt.menu_close),
+            ],
+        );
+    } else {
+        draw_text_centered_in_box(
+            buffer,
+            mx,
+            mw,
             foot_y + 2,
+            "1-4: ABAS   CIMA/BAIXO: ITENS   < >/ENTER: ALTERAR   ESC: FECHAR",
             0x78909C,
         );
     }
 }
 
-// ============================================================================
-// MODAL DE DETALHES DO JOGO (GAME DETAIL CARD)
-// ============================================================================
 fn render_game_detail_card(
     buffer: &mut [u32],
     rom: &RomEntry,
     gamepad_connected: bool,
-    card_cursor: usize, // 0 = INICIAR JOGO, 1 = ZERAR STATS, 2 = VOLTAR
+    card_cursor: usize,
+    lang: Language,
 ) {
-    // Escurece o fundo
+    let txt = get_texts(lang);
+
     for px in buffer.iter_mut() {
         let p = *px;
         let r = (((p >> 16) & 0xFF) * 3) / 10;
@@ -4139,7 +4759,7 @@ fn render_game_detail_card(
     }
 
     let mw = 360;
-    let mh = 195;
+    let mh = 198;
     let mx = (CANVAS_WIDTH - mw) / 2;
     let my = (CANVAS_HEIGHT - mh) / 2;
 
@@ -4147,20 +4767,16 @@ fn render_game_detail_card(
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, mh, 0x0C121D);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, 24, 0x162238);
 
-    // Título do Jogo
     let title = sanitize_rom_name_for_scraping(&rom.name);
-    let title_short = if title.len() > 28 { format!("{}...", &title[..25]) } else { title };
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &title_short, mx + 14, my + 8, 0xFFFFFF);
+    let title_short = if title.len() > 34 { format!("{}...", &title[..31]) } else { title };
+    draw_text_centered_in_box(buffer, mx, mw, my + 9, &title_short, 0xFFFFFF);
 
-    // Capa do Jogo à esquerda
     let thumb_w = 70;
     let thumb_h = 100;
-    let thumb_x = mx + 16;
-    let thumb_y = my + 38;
+    let thumb_x = mx + 20;
+    let thumb_y = my + 36;
 
-    // Desenha a moldura primeiro: a capa será pintada por cima do centro dela.
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, thumb_x - 1, thumb_y - 1, thumb_w + 2, thumb_h + 2, 0x00E5FF);
-
     for y in 0..thumb_h {
         for x in 0..thumb_w {
             let sx = (x * 90) / thumb_w;
@@ -4168,76 +4784,82 @@ fn render_game_detail_card(
             buffer[(thumb_y + y) * CANVAS_WIDTH + (thumb_x + x)] = rom.preview[sy * 90 + sx];
         }
     }
-    // Painel de Estatísticas à direita
-    let stat_x = mx + 102;
+
+    let stat_x = mx + 106;
     let mut stat_y = my + 44;
 
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "INFORMACOES DO JOGO", stat_x, stat_y, 0x00E5FF);
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, txt.stats_header, stat_x, stat_y, 0x00E5FF);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, stat_x, stat_y + 11, 230, 1, 0x1E2B45);
-    stat_y += 20;
+    stat_y += 22;
 
-    // Tempo Jogado
     let hours = rom.stats.play_time_seconds / 3600;
     let minutes = (rom.stats.play_time_seconds % 3600) / 60;
-    let time_str = format!("TEMPO JOGADO: {}h {}min", hours, minutes);
+    let time_str = format!("{}: {}h {}min", txt.stats_time, hours, minutes);
     draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &time_str, stat_x, stat_y, 0xFFFFFF);
-    stat_y += 18;
+    stat_y += 20;
 
-    // Vezes Aberto
-    let sessions_str = format!("VEZES INICIADO: {}x", rom.stats.play_count);
+    let sessions_str = format!("{}: {}x", txt.stats_plays, rom.stats.play_count);
     draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &sessions_str, stat_x, stat_y, 0xCFD8DC);
-    stat_y += 18;
+    stat_y += 20;
 
-    // Tipo de Hardware da ROM
-    let hw_str = format!("MAPPER {} | {}KB PRG", rom.mapper, rom.prg_kb);
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &hw_str, stat_x, stat_y, 0x78909C);
+    let fav_str = if rom.stats.is_favorite { txt.stats_fav_yes } else { txt.stats_fav_no };
+    let fav_col = if rom.stats.is_favorite { 0xFFD54F } else { 0x78909C };
+    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, fav_str, stat_x, stat_y, fav_col);
 
-    // Botões de Ação no Rodapé do Card
-    let btn_y = my + 148;
-    let options = ["JOGAR", "RESETAR", "VOLTAR"];
+    let btn_y = my + 146;
+    let bw = 96;
+    let btn_gap = 16;
+    let start_bx = mx + (mw - (bw * 3 + btn_gap * 2)) / 2;
 
-    for (idx, opt) in options.iter().enumerate() {
-        let bx = mx + 20 + idx * 110;
-        let bw = 95;
+    for (idx, &opt) in txt.detail_btns.iter().enumerate() {
+        let bx = start_bx + idx * (bw + btn_gap);
         let is_sel = idx == card_cursor;
 
         let bg = if is_sel { 0x00E5FF } else { 0x141E30 };
         let text_c = if is_sel { 0x000000 } else { 0xCFD8DC };
 
         draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, bx, btn_y, bw, 22, bg);
-        let tx = bx + (bw.saturating_sub(opt.len() * 6)) / 2;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, opt, tx, btn_y + 7, text_c);
+        draw_text_centered_in_box(buffer, bx, bw, btn_y + 8, opt, text_c);
     }
 
-    // Prompts do rodapé
-    let hint_y = my + mh - 14;
+    let hint_y = my + mh - 18;
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, hint_y - 5, mw, 1, 0x1A253A);
     if gamepad_connected {
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "< >", mx + 16, hint_y - 2, 0x37474F, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "MUDAR", mx + 46, hint_y, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", mx + 95, hint_y - 2, 0x2E7D32, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "CONFIRMAR", mx + 112, hint_y, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "B", mx + 185, hint_y - 2, 0xC62828, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "FECHAR", mx + 202, hint_y, 0x90A4AE);
+        draw_centered_badge_row(
+            buffer,
+            mx,
+            mw,
+            hint_y,
+            18,
+            &[
+                ("< >", 0x37474F, 0xFFFFFF, txt.menu_adjust),
+                ("A", 0x2E7D32, 0xFFFFFF, txt.menu_confirm),
+                ("B", 0xC62828, 0xFFFFFF, txt.menu_close),
+            ],
+        );
     } else {
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "< >: ESCOLHER   ENTER: CONFIRMAR   ESC: FECHAR", mx + 25, hint_y, 0x78909C);
+        draw_text_centered_in_box(
+            buffer,
+            mx,
+            mw,
+            hint_y + 2,
+            "< >: ESCOLHER   ENTER: CONFIRMAR   ESC: FECHAR",
+            0x78909C,
+        );
     }
 }
 
-// ============================================================================
-// NOVO MENU DE PAUSE IN-GAME COM ABAS (IGUAL AO HUB)
-// ============================================================================
 fn render_in_game_menu(
     buffer: &mut [u32],
     settings: &EmulatorSettings,
     rom_title: &str,
     has_save: bool,
-    active_tab: usize,       // 0: PARTIDA, 1: VIDEO, 2: AUDIO
-    row_cursor: usize,       // Linha selecionada na aba
+    active_tab: usize,
+    row_cursor: usize,
     gamepad_connected: bool,
 ) {
-    // 1. Escurecimento translúcido do jogo ao fundo
+    let txt = get_texts(settings.language);
+
     for px in buffer.iter_mut() {
         let p = *px;
         let r = (((p >> 16) & 0xFF) * 2) / 10;
@@ -4251,18 +4873,15 @@ fn render_in_game_menu(
     let mx = (CANVAS_WIDTH - mw) / 2;
     let my = (CANVAS_HEIGHT - mh) / 2;
 
-    // Moldura principal com borda neon
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx - 1, my - 1, mw + 2, mh + 2, 0x00E5FF);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, mh, 0x0B0F19);
 
-    // Barra de Cabeçalho / Abas
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my, mw, 26, 0x131A29);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, my + 26, mw, 1, 0x1E2B42);
 
-    let tabs = ["1.PARTIDA", "2.VIDEO", "3.AUDIO"];
-    let tab_w = mw / tabs.len();
+    let tab_w = mw / txt.tabs_ingame.len();
 
-    for (t_idx, &t_name) in tabs.iter().enumerate() {
+    for (t_idx, &t_name) in txt.tabs_ingame.iter().enumerate() {
         let tx = mx + t_idx * tab_w;
         let is_tab_sel = t_idx == active_tab;
 
@@ -4271,52 +4890,47 @@ fn render_in_game_menu(
             draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, tx, my + 24, tab_w, 2, 0x00E5FF);
         }
         let tc = if is_tab_sel { 0x00E5FF } else { 0x607D8B };
-        let text_x = tx + (tab_w.saturating_sub(t_name.len() * 6)) / 2;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, t_name, text_x, my + 9, tc);
+        draw_text_centered_in_box(buffer, tx, tab_w, my + 10, t_name, tc);
     }
 
-    // Sub-cabeçalho com título limpo do jogo
     let clean_title = sanitize_rom_name_for_scraping(rom_title);
     let title_short = if clean_title.len() > 36 {
         format!("{}...", &clean_title[..33])
     } else {
         clean_title
     };
-    let sub_y = my + 30;
-    let title_x = mx + (mw.saturating_sub(title_short.len() * 6)) / 2;
-    draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &title_short, title_x, sub_y, 0x00E5FF);
+    let sub_y = my + 31;
+    draw_text_centered_in_box(buffer, mx, mw, sub_y, &title_short, 0x00E5FF);
     draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx + 16, sub_y + 11, mw - 32, 1, 0x1E2B42);
 
-    // Itens de cada Aba
     let items: Vec<(String, String)> = match active_tab {
         0 => vec![
-            ("CONTINUAR JOGANDO".into(), "".into()),
-            (format!("SALVAR ESTADO [SLOT {}]", settings.active_save_slot), "[F5]".into()),
-            (format!("CARREGAR ESTADO [{}]", settings.active_save_slot), if has_save { "< PRONTO > [F8]".into() } else { "< VAZIO >".into() }),
-            ("TROCAR SLOT ATIVO".into(), format!("< SLOT {} >", settings.active_save_slot)),
-            ("REINICIAR CONSOLE".into(), "< RESET > [F2]".into()),
-            ("SAIR PARA O HUB ARCADE".into(), "".into()),
+            (txt.ig_resume.into(), "".into()),
+            (format!("{} [SLOT {}]", txt.ig_save, settings.active_save_slot), "[F5]".into()),
+            (format!("{} [{}]", txt.ig_load, settings.active_save_slot), if has_save { txt.ig_ready.into() } else { txt.ig_empty.into() }),
+            (txt.ig_slot.into(), format!("< SLOT {} >", settings.active_save_slot)),
+            (txt.ig_reset.into(), "< RESET > [F2]".into()),
+            (txt.ig_to_hub.into(), "".into()),
         ],
         1 => vec![
-            ("MODO DE TELA".into(), match settings.display_mode {
-                DisplayMode::Windowed => "< JANELA (1024x576) >".into(),
-                DisplayMode::Borderless => "< SEM BORDAS >".into(),
-                DisplayMode::Fullscreen => "< TELA CHEIA >".into(),
+            (txt.lbl_display_mode.into(), match settings.display_mode {
+                DisplayMode::Windowed => txt.val_windowed.into(),
+                DisplayMode::Borderless => txt.val_borderless.into(),
+                DisplayMode::Fullscreen => txt.val_fullscreen.into(),
             }),
-            ("FORMATO DE TELA".into(), settings.aspect_label().into()),
-            ("FILTRO SCANLINES".into(), if settings.crt_scanlines { "< ATIVADO >".into() } else { "< DESATIVADO >".into() }),
-            ("LIMITE 8 SPRITES".into(), if settings.sprite_limit { "< ORIGINAL (FLICKER) >".into() } else { "< SEM LIMITE >".into() }),
+            (txt.lbl_aspect.into(), settings.aspect_label().into()),
+            (txt.lbl_scanlines.into(), settings.crt_label().into()),
+            (txt.lbl_sprite_limit.into(), if settings.sprite_limit { txt.val_original.into() } else { txt.val_nolimit.into() }),
         ],
-        // ABA 2: ÁUDIO LIMPO E DIRETO
         2 => vec![
-            ("VOLUME GERAL".into(), format!("< {}% >", (settings.volume * 100.0).round() as usize)),
-            ("MUTAR AUDIO (MUTE)".into(), if settings.mute_all { "< ATIVADO >".into() } else { "< DESATIVADO >".into() }),
+            (txt.lbl_volume.into(), format!("< {}% >", (settings.volume * 100.0).round() as usize)),
+            (txt.lbl_mute.into(), if settings.mute_all { txt.val_on.into() } else { txt.val_off.into() }),
         ],
         _ => vec![],
     };
 
     let start_y = my + 48;
-    let row_spacing = if active_tab == 0 { 22 } else { 30 };
+    let row_spacing = if active_tab == 0 { 22 } else { 28 };
 
     for (i, (label, val)) in items.iter().enumerate() {
         let iy = start_y + i * row_spacing;
@@ -4337,135 +4951,217 @@ fn render_in_game_menu(
         }
     }
 
-    // Rodapé de Ações
-    let foot_y = my + mh - 20;
-    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, foot_y - 4, mw, 1, 0x1A253A);
+    let foot_y = my + mh - 18;
+    draw_rect(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, mx, foot_y - 5, mw, 1, 0x1A253A);
 
     if gamepad_connected {
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "LB/RB", mx + 14, foot_y, 0x37474F, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "ABAS", mx + 50, foot_y + 2, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", mx + 95, foot_y, 0x2E7D32, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "CONFIRMAR", mx + 112, foot_y + 2, 0x90A4AE);
-
-        draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "B", mx + 185, foot_y, 0xC62828, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "VOLTAR", mx + 202, foot_y + 2, 0x90A4AE);
-    } else {
-        draw_text(
+        draw_centered_badge_row(
             buffer,
-            CANVAS_WIDTH,
-            CANVAS_HEIGHT,
-            "1-3: ABAS   CIMA/BAIXO: ITENS   ENTER: SELECIONAR   ESC: VOLTAR",
-            mx + 10,
+            mx,
+            mw,
+            foot_y,
+            18,
+            &[
+                ("LB/RB", 0x37474F, 0xFFFFFF, txt.menu_tabs),
+                ("A", 0x2E7D32, 0xFFFFFF, txt.menu_confirm),
+                ("B", 0xC62828, 0xFFFFFF, txt.menu_close),
+            ],
+        );
+    } else {
+        draw_text_centered_in_box(
+            buffer,
+            mx,
+            mw,
             foot_y + 2,
+            "1-3: ABAS   CIMA/BAIXO: ITENS   ENTER: SELECIONAR   ESC: VOLTAR",
             0x78909C,
         );
     }
 }
 
-// ============================================================================
-// ESCALONADOR DO NES PARA O CANVAS DE 512x288
-// ============================================================================
 fn blit_nes_to_canvas(
     nes_frame: &[u32; 256 * 240],
     canvas: &mut [u32],
-    aspect_mode: u8,
-    crt_scanlines: bool,
+    aspect_mode: u8, // 0: 4:3, 1: 16:9 Ambient, 2: 16:9 Zoom, 3: 16:9 Esticado
+    crt_mode: u8,    // 0: Off, 1: CRT Arcade, 2: TV de Tubo, 3: TV Antiga RF (Chiado + Linha)
 ) {
-    match aspect_mode {
-        // 4:3 clássico ou imagem 4:3 com luz ambiente nas laterais.
-        0 | 1 => {
-            let target_w = 384;
-            let offset_x = (CANVAS_WIDTH - target_w) / 2;
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static FRAME_TICK: AtomicU32 = AtomicU32::new(1);
+    let tick = FRAME_TICK.fetch_add(1, Ordering::Relaxed);
 
-            for y in 0..CANVAS_HEIGHT {
-                let row = y * CANVAS_WIDTH;
-                if aspect_mode == 0 {
-                    canvas[row..row + offset_x].fill(0x080A10);
-                    canvas[row + offset_x + target_w..row + CANVAS_WIDTH].fill(0x080A10);
+    let (target_w, offset_x, crop_top) = match aspect_mode {
+        0 | 1 => (384usize, (CANVAS_WIDTH - 384) / 2, 0usize),
+        2 => (CANVAS_WIDTH, 0usize, 18usize),
+        _ => (CANVAS_WIDTH, 0usize, 0usize),
+    };
+    let visible_nes_h = 240 - crop_top * 2;
+
+    // 1. Preenche as barras laterais (4:3 Clássico ou 16:9 Ambient Light)
+    if offset_x > 0 {
+        for y in 0..CANVAS_HEIGHT {
+            let row = y * CANVAS_WIDTH;
+            if aspect_mode == 0 {
+                canvas[row..row + offset_x].fill(0x05070B);
+                canvas[row + offset_x + target_w..row + CANVAS_WIDTH].fill(0x05070B);
+            } else {
+                let blur_y = ((y / 8) * 8 * 240 / CANVAS_HEIGHT).clamp(4, 235);
+                for x in 0..offset_x {
+                    let sample_x = 8 + ((offset_x - 1 - x) * 32) / offset_x;
+                    let p1 = nes_frame[(blur_y - 4) * 256 + sample_x];
+                    let p2 = nes_frame[blur_y * 256 + (sample_x + 4).min(255)];
+                    let p3 = nes_frame[(blur_y + 4) * 256 + sample_x];
+                    let r = ((((p1 >> 16) & 0xFF) + ((p2 >> 16) & 0xFF) + ((p3 >> 16) & 0xFF)) / 10).min(255);
+                    let g = ((((p1 >> 8) & 0xFF) + ((p2 >> 8) & 0xFF) + ((p3 >> 8) & 0xFF)) / 10).min(255);
+                    let b = (((p1 & 0xFF) + (p2 & 0xFF) + (p3 & 0xFF)) / 10).min(255);
+                    canvas[row + x] = (r << 16) | (g << 8) | b;
+                }
+                for x in (offset_x + target_w)..CANVAS_WIDTH {
+                    let rel_x = x - (offset_x + target_w);
+                    let sample_x = 247usize.saturating_sub((rel_x * 32) / offset_x);
+                    let p1 = nes_frame[(blur_y - 4) * 256 + sample_x];
+                    let p2 = nes_frame[blur_y * 256 + sample_x.saturating_sub(4)];
+                    let p3 = nes_frame[(blur_y + 4) * 256 + sample_x];
+                    let r = ((((p1 >> 16) & 0xFF) + ((p2 >> 16) & 0xFF) + ((p3 >> 16) & 0xFF)) / 10).min(255);
+                    let g = ((((p1 >> 8) & 0xFF) + ((p2 >> 8) & 0xFF) + ((p3 >> 8) & 0xFF)) / 10).min(255);
+                    let b = (((p1 & 0xFF) + (p2 & 0xFF) + (p3 & 0xFF)) / 10).min(255);
+                    canvas[row + x] = (r << 16) | (g << 8) | b;
+                }
+                canvas[row + offset_x - 2] = 0x182438;
+                canvas[row + offset_x - 1] = 0x000000;
+                canvas[row + offset_x + target_w] = 0x000000;
+                canvas[row + offset_x + target_w + 1] = 0x182438;
+            }
+        }
+    }
+
+    let half_w = (target_w / 2) as i32;
+    let half_h = (CANVAS_HEIGHT / 2) as i32;
+
+    // Barras suaves subindo pela tela no Modo 3 (TV Antiga RF)
+    let hum_bar_y = (CANVAS_HEIGHT as i32 + 30) - ((tick as i32 * 2) % (CANVAS_HEIGHT as i32 + 60));
+    let rf_line_y = (CANVAS_HEIGHT as i32 - 1) - ((tick as i32 * 4 + 90) % CANVAS_HEIGHT as i32);
+    let mut rng_state = tick.wrapping_mul(0x9E3779B9) ^ 0x85EBCA6B;
+
+    for y in 0..CANVAS_HEIGHT {
+        let canvas_row = y * CANVAS_WIDTH + offset_x;
+        let nes_y = (crop_top + (y * visible_nes_h) / CANVAS_HEIGHT).min(239);
+        let nes_row = nes_y * 256;
+
+        let dy = ((y as i32 - half_h) * 1024) / half_h;
+        let dy2 = (dy * dy) >> 10;
+
+        let hum_dist = (y as i32 - hum_bar_y).abs();
+        let line_dist = (y as i32 - rf_line_y).abs();
+
+        // Scanline horizontal alinhada com a linha real da tela (Zero anéis ou ondas!)
+        let is_scanline = (y & 1) == 1;
+
+        for x in 0..target_w {
+            let nes_x = ((x * 256) / target_w).min(255);
+
+            // MODO 0: PIXEL PURO (SEM FILTRO)
+            if crt_mode == 0 {
+                canvas[canvas_row + x] = nes_frame[nes_row + nes_x];
+                continue;
+            }
+
+            // MODO 1: CRT ARCADE (Imagem 100% reta, limpa e nítida com scanlines suaves de 86%)
+            if crt_mode == 1 {
+                let pixel = nes_frame[nes_row + nes_x];
+                if is_scanline {
+                    let r = (((pixel >> 16) & 0xFF) * 86) / 100;
+                    let g = (((pixel >> 8) & 0xFF) * 86) / 100;
+                    let b = ((pixel & 0xFF) * 86) / 100;
+                    canvas[canvas_row + x] = (r << 16) | (g << 8) | b;
                 } else {
-                    let blur_y = ((y / 8) * 8 * 240 / CANVAS_HEIGHT).clamp(4, 235);
-                    for x in 0..offset_x {
-                        let sample_x = 8 + ((offset_x - 1 - x) * 32) / offset_x;
-                        let p1 = nes_frame[(blur_y - 4) * 256 + sample_x];
-                        let p2 = nes_frame[blur_y * 256 + (sample_x + 4).min(255)];
-                        let p3 = nes_frame[(blur_y + 4) * 256 + sample_x];
-                        let r = (((((p1 >> 16) & 0xFF) + ((p2 >> 16) & 0xFF) + ((p3 >> 16) & 0xFF)) / 10).min(255)) as u32;
-                        let g = (((((p1 >> 8) & 0xFF) + ((p2 >> 8) & 0xFF) + ((p3 >> 8) & 0xFF)) / 10).min(255)) as u32;
-                        let b = ((((p1 & 0xFF) + (p2 & 0xFF) + (p3 & 0xFF)) / 10).min(255)) as u32;
-                        canvas[row + x] = (r << 16) | (g << 8) | b;
-                    }
-                    for x in (offset_x + target_w)..CANVAS_WIDTH {
-                        let rel_x = x - (offset_x + target_w);
-                        let sample_x = 247usize.saturating_sub((rel_x * 32) / offset_x);
-                        let p1 = nes_frame[(blur_y - 4) * 256 + sample_x];
-                        let p2 = nes_frame[blur_y * 256 + sample_x.saturating_sub(4)];
-                        let p3 = nes_frame[(blur_y + 4) * 256 + sample_x];
-                        let r = ((((p1 >> 16) & 0xFF) + ((p2 >> 16) & 0xFF) + ((p3 >> 16) & 0xFF)) / 10).min(255);
-                        let g = ((((p1 >> 8) & 0xFF) + ((p2 >> 8) & 0xFF) + ((p3 >> 8) & 0xFF)) / 10).min(255);
-                        let b = (((p1 & 0xFF) + (p2 & 0xFF) + (p3 & 0xFF)) / 10).min(255);
-                        canvas[row + x] = (r << 16) | (g << 8) | b;
-                    }
-                    canvas[row + offset_x - 2] = 0x182438;
-                    canvas[row + offset_x - 1] = 0x000000;
-                    canvas[row + offset_x + target_w] = 0x000000;
-                    canvas[row + offset_x + target_w + 1] = 0x182438;
+                    canvas[canvas_row + x] = pixel;
                 }
+                continue;
             }
 
-            for y in 0..CANVAS_HEIGHT {
-                let nes_row = (y * 240 / CANVAS_HEIGHT) * 256;
-                let canvas_row = y * CANVAS_WIDTH + offset_x;
-                let dim = crt_scanlines && y % 2 == 1;
-                for x in 0..target_w {
-                    let mut pixel = nes_frame[nes_row + (x * 256 / target_w)];
-                    if dim {
-                        let r = (((pixel >> 16) & 0xFF) * 8) / 10;
-                        let g = (((pixel >> 8) & 0xFF) * 8) / 10;
-                        let b = ((pixel & 0xFF) * 8) / 10;
-                        pixel = (r << 16) | (g << 8) | b;
-                    }
-                    canvas[canvas_row + x] = pixel;
-                }
+            // MODO 2 e 3: TV DE TUBO (Mantém os pixels e textos 100% nítidos/retos no centro
+            // e aplica a moldura arredondada de vidro + vinheta suave nas bordas!)
+            let dx = ((x as i32 - half_w) * 1024) / half_w;
+            let dx2 = (dx * dx) >> 10;
+
+            // Moldura com cantos arredondados suaves da TV de tubo
+            let corner_x = (dx.abs() - 890).max(0);
+            let corner_y = (dy.abs() - 870).max(0);
+            let corner_sq = corner_x * corner_x + corner_y * corner_y;
+
+            if corner_sq > 135 * 135 {
+                let is_rim = corner_sq <= 152 * 152;
+                canvas[canvas_row + x] = if is_rim { 0x161C26 } else { 0x05070B };
+                continue;
             }
-        }
-        // 16:9 zoom proporcional, cortando o overscan vertical.
-        2 => {
-            let crop_top = 18;
-            let visible_height = 240 - crop_top * 2;
-            for y in 0..CANVAS_HEIGHT {
-                let nes_row = (crop_top + y * visible_height / CANVAS_HEIGHT) * 256;
-                let canvas_row = y * CANVAS_WIDTH;
-                let dim = crt_scanlines && y % 2 == 1;
-                for x in 0..CANVAS_WIDTH {
-                    let mut pixel = nes_frame[nes_row + (x * 256 / CANVAS_WIDTH)];
-                    if dim {
-                        let r = (((pixel >> 16) & 0xFF) * 8) / 10;
-                        let g = (((pixel >> 8) & 0xFF) * 8) / 10;
-                        let b = ((pixel & 0xFF) * 8) / 10;
-                        pixel = (r << 16) | (g << 8) | b;
-                    }
-                    canvas[canvas_row + x] = pixel;
+
+            // No Modo 3, quando a linha fina de RF passa, dá um leve pulso de 1px de sincronismo
+            let sample_nes_x = if crt_mode == 3 && line_dist == 0 {
+                (nes_x + 1).min(255)
+            } else {
+                nes_x
+            };
+
+            let center_px = nes_frame[nes_row + sample_nes_x];
+            let left_px = nes_frame[nes_row + sample_nes_x.saturating_sub(1)];
+
+            // Nitidez de 90% no pixel central + 10% de calor analógico (Textos 100% legíveis!)
+            let mut r = (((center_px >> 16) & 0xFF) * 9 + ((left_px >> 16) & 0xFF)) / 10;
+            let mut g = (center_px >> 8) & 0xFF;
+            let mut b = ((center_px & 0xFF) * 9 + (left_px & 0xFF)) / 10;
+
+            // MODO 3: CHIADO SUTIL DE ANTENA RF + LINHAS SUBINDO PELA TELA
+            if crt_mode == 3 {
+                rng_state ^= rng_state << 13;
+                rng_state ^= rng_state >> 17;
+                rng_state ^= rng_state << 5;
+
+                // 1. Faixa translúcida de sincronismo subindo pela tela (Hum Bar suave)
+                if hum_dist < 18 {
+                    let boost = (18 - hum_dist as u32) * 3 / 4;
+                    r = (r + boost).min(255);
+                    g = (g + boost).min(255);
+                    b = (b + boost).min(255);
                 }
-            }
-        }
-        // 16:9 esticado.
-        _ => {
-            for y in 0..CANVAS_HEIGHT {
-                let nes_row = (y * 240 / CANVAS_HEIGHT) * 256;
-                let canvas_row = y * CANVAS_WIDTH;
-                let dim = crt_scanlines && y % 2 == 1;
-                for x in 0..CANVAS_WIDTH {
-                    let mut pixel = nes_frame[nes_row + (x * 256 / CANVAS_WIDTH)];
-                    if dim {
-                        let r = (((pixel >> 16) & 0xFF) * 8) / 10;
-                        let g = (((pixel >> 8) & 0xFF) * 8) / 10;
-                        let b = ((pixel & 0xFF) * 8) / 10;
-                        pixel = (r << 16) | (g << 8) | b;
-                    }
-                    canvas[canvas_row + x] = pixel;
+
+                // 2. Linha fina de tracking RF subindo com pequenos traços de interferência
+                if line_dist <= 1 && (rng_state & 3) == 0 {
+                    let boost = if line_dist == 0 { 24 } else { 12 };
+                    r = (r + boost).min(255);
+                    g = (g + boost).min(255);
+                    b = (b + boost).min(255);
                 }
+
+                // 3. Chiado analógico bem sutil (-6 a +6) + ocasionais pontinhos de antena
+                let subtle_grain = ((rng_state & 0x0F) as i32) - 7;
+                let snow_dot = if (rng_state & 0x1FF) < if hum_dist < 8 { 10 } else { 2 } {
+                    28
+                } else {
+                    0
+                };
+                let noise = subtle_grain + snow_dot;
+                r = (r as i32 + noise).clamp(0, 255) as u32;
+                g = (g as i32 + noise).clamp(0, 255) as u32;
+                b = (b as i32 + noise).clamp(0, 255) as u32;
             }
+
+            // Scanlines horizontais suaves (86% nas linhas ímpares para não escurecer a imagem)
+            if is_scanline {
+                r = (r * 86) / 100;
+                g = (g * 86) / 100;
+                b = (b * 86) / 100;
+            }
+
+            // Vinheta suave apenas nas extremidades do vidro do tubo
+            let edge_dist = ((dx2 + dy2) >> 1).saturating_sub(500); // Só escurece perto da borda
+            if edge_dist > 0 {
+                let vig = (1024 - (edge_dist * 220 / 524)).clamp(800, 1024) as u32;
+                r = (r * vig) >> 10;
+                g = (g * vig) >> 10;
+                b = (b * vig) >> 10;
+            }
+
+            canvas[canvas_row + x] = (r << 16) | (g << 8) | b;
         }
     }
 }
@@ -4556,6 +5252,28 @@ fn init_roms_directory(args: &[String]) -> String {
 // ============================================================================
 // MAIN LOOP E ATALHOS DE SISTEMA (HUB ARCADE + EMULADOR)
 // ============================================================================
+fn poll_menu_keys_with_cooldown(window: &minifb::Window, xbox_menu: bool, start_trigger: bool) -> (bool, bool) {
+    use std::sync::atomic::{AtomicU32, Ordering};
+    static COOLDOWN: AtomicU32 = AtomicU32::new(0);
+
+    let cd = COOLDOWN.load(Ordering::Relaxed);
+    if cd > 0 {
+        COOLDOWN.store(cd - 1, Ordering::Relaxed);
+        return (false, false);
+    }
+
+    let esc = window.is_key_down(Key::Escape);
+    let f3 = window.is_key_down(Key::F3);
+
+    if esc || f3 || xbox_menu || start_trigger {
+        // Trava novos disparos por 18 frames (0.3s) para o menu NUNCA piscar!
+        COOLDOWN.store(18, Ordering::Relaxed);
+        (esc, f3 || xbox_menu || start_trigger)
+    } else {
+        (false, false)
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let mut current_rom_dir = init_roms_directory(&args);
@@ -4569,6 +5287,8 @@ fn main() {
     let mut selected_rom_idx = 0usize;
     let mut hub_category = HubCategory::All;
     let mut settings = EmulatorSettings::load();
+    // Sempre inicia em janela normal, independentemente do modo salvo anteriormente.
+    settings.display_mode = DisplayMode::Windowed;
     let mut in_settings_menu = false;
     let mut settings_tab = 0usize;      // 0 = VIDEO, 1 = AUDIO, 2 = SISTEMA, 3 = CONTROLES
     let mut settings_row = 0usize;      // Linha selecionada
@@ -4646,9 +5366,6 @@ fn main() {
     .expect("Nao foi possivel criar a janela");
 
     window.set_target_fps(60);
-    if settings.display_mode != DisplayMode::Windowed {
-        apply_window_mode(&window, settings.display_mode);
-    }
 
     let mut prev_lb = false;
     let mut prev_rb = false;
@@ -4658,8 +5375,6 @@ fn main() {
     let mut prev_lt_btn = false;
 
     while window.is_open() {
-        let esc_pressed = window.is_key_pressed(Key::Escape, KeyRepeat::No);
-        let f3_pressed = window.is_key_pressed(Key::F3, KeyRepeat::No);
 
         // Atalho universal de Tela Cheia (F11 ou Alt + Enter)
         let alt_enter = (window.is_key_down(Key::LeftAlt) || window.is_key_down(Key::RightAlt))
@@ -4673,6 +5388,11 @@ fn main() {
             settings.save();
         }
         let xbox = poll_xbox_controller();
+        let (esc_pressed, f3_pressed) = poll_menu_keys_with_cooldown(
+            &window,
+            xbox.menu_btn_held,
+            false,
+        );
         let x_just_pressed = xbox.x_pressed && !prev_x_btn;
         prev_x_btn = xbox.x_pressed;
         let xbox_menu_just_pressed = xbox.menu_btn_pressed && !prev_menu_button;
@@ -4701,8 +5421,29 @@ fn main() {
 
         let selected_actual_rom_idx = filtered_indices.get(selected_rom_idx).copied().unwrap_or(0);
         if in_hub {
+            if !settings.welcome_completed {
+                let up = window.is_key_pressed(Key::Up, KeyRepeat::No) || (joy_just_pressed & (1 << 4)) != 0;
+                let down = window.is_key_pressed(Key::Down, KeyRepeat::No) || (joy_just_pressed & (1 << 5)) != 0;
+                let confirm = window.is_key_pressed(Key::Enter, KeyRepeat::No)
+                    || window.is_key_pressed(Key::Z, KeyRepeat::No)
+                    || (joy_just_pressed & (1 << 0)) != 0
+                    || (joy_just_pressed & (1 << 3)) != 0;
+
+                if up { settings.language = settings.language.prev(); }
+                if down { settings.language = settings.language.next(); }
+                if confirm {
+                    settings.welcome_completed = true;
+                    settings.save();
+                }
+
+                render_welcome_screen(&mut canvas_buffer, settings.language, xbox.connected);
+                window.update_with_buffer(&canvas_buffer, CANVAS_WIDTH, CANVAS_HEIGHT).unwrap();
+                continue;
+            }
+
             // Tecla F3 ou Botão START do Xbox
             let start_pressed = (joy_just_pressed & (1 << 3)) != 0;
+            let b_pressed = (joy_just_pressed & (1 << 1)) != 0;
             let toggle_settings = f3_pressed || start_pressed
                 || (esc_pressed && !in_detail_card && !in_search_mode);
 
@@ -4729,7 +5470,6 @@ fn main() {
                 }
 
                 // Se apertar F3, START ou B/ESC, fecha o menu e encerra o frame
-                let b_pressed = (joy_just_pressed & (1 << 1)) != 0;
                 if toggle_settings || b_pressed || esc_pressed {
                     in_settings_menu = false;
                 } else {
@@ -4747,7 +5487,7 @@ fn main() {
                     let max_settings_rows = match settings_tab {
                         0 => 3, // Vídeo: 4 opções (0 a 3)
                         1 => 1, // Áudio: 2 opções (0 a 1)
-                        2 => 2, // Sistema: 3 opções (0 a 2)
+                        2 => 3, // Sistema: slot, turbo, idioma e sair
                         _ => 2,
                     };
                     if up && settings_row > 0 { settings_row -= 1; }
@@ -4763,7 +5503,7 @@ fn main() {
                                     apply_window_mode(&window, settings.display_mode);
                                 }
                                 1 => settings.aspect_mode = if left { (settings.aspect_mode + 3) % 4 } else { (settings.aspect_mode + 1) % 4 },
-                                2 => settings.crt_scanlines = !settings.crt_scanlines,
+                                2 => settings.crt_mode = if left { (settings.crt_mode + 3) % 4 } else { (settings.crt_mode + 1) % 4 },
                                 3 => settings.sprite_limit = !settings.sprite_limit,
                                 _ => {}
                             },
@@ -4778,6 +5518,13 @@ fn main() {
                             2 => match settings_row {
                                 0 => settings.active_save_slot = if settings.active_save_slot >= 3 { 1 } else { settings.active_save_slot + 1 },
                                 1 => settings.turbo_multiplier = if settings.turbo_multiplier >= 4 { 2 } else { settings.turbo_multiplier + 1 },
+                                2 => settings.language = if left { settings.language.prev() } else { settings.language.next() },
+                                3 => {
+                                    if confirm {
+                                        settings.save();
+                                        break;
+                                    }
+                                }
                                 _ => {}
                             },
                             _ => {}
@@ -4790,6 +5537,10 @@ fn main() {
             else if toggle_settings {
                 in_settings_menu = true;
                 settings_row = 0;
+            } else if b_pressed && !in_detail_card && !in_search_mode {
+                in_settings_menu = true;
+                settings_tab = 2;
+                settings_row = 3;
             } 
             // 3. SE ESTIVER NO MODAL DE DETALHES DO JOGO:
             else if in_detail_card {
@@ -5007,7 +5758,7 @@ fn main() {
                 selected_rom_idx,
                 hub_category,
                 xbox.connected,
-                in_settings_menu,
+                &settings,
                 in_search_mode,
                 &search_query,
                 vkb_cursor,
@@ -5015,7 +5766,13 @@ fn main() {
 
             // 2. Se o card de detalhes estiver aberto, desenha por cima
             if in_detail_card && !filtered_indices.is_empty() {
-                render_game_detail_card(&mut canvas_buffer, &rom_list[selected_actual_rom_idx], xbox.connected, detail_cursor);
+                render_game_detail_card(
+                    &mut canvas_buffer,
+                    &rom_list[selected_actual_rom_idx],
+                    xbox.connected,
+                    detail_cursor,
+                    settings.language,
+                );
             }
 
             // 3. Se o menu de opções estiver aberto, desenha por cima de tudo
@@ -5173,7 +5930,7 @@ fn main() {
                                             apply_window_mode(&window, settings.display_mode);
                                         }
                                         1 => settings.aspect_mode = if left { (settings.aspect_mode + 3) % 4 } else { (settings.aspect_mode + 1) % 4 },
-                                        2 => settings.crt_scanlines = !settings.crt_scanlines,
+                                        2 => settings.crt_mode = if left { (settings.crt_mode + 3) % 4 } else { (settings.crt_mode + 1) % 4 },
                                         3 => settings.sprite_limit = !settings.sprite_limit,
                                         _ => {}
                                     }
@@ -5208,7 +5965,7 @@ fn main() {
                     }
 
                     // Renderiza o frame do jogo pausado com o novo menu em abas
-                    blit_nes_to_canvas(&c.bus.ppu.framebuffer, &mut canvas_buffer, settings.aspect_mode, settings.crt_scanlines);
+                    blit_nes_to_canvas(&c.bus.ppu.framebuffer, &mut canvas_buffer, settings.aspect_mode, settings.crt_mode);
                     let has_slot_save = has_save_state_on_disk(&active_rom_path, settings.active_save_slot) || save_slots[settings.active_save_slot - 1].is_some();
                     let display_game_name = std::path::Path::new(&active_rom_path)
                         .file_stem()
@@ -5298,7 +6055,7 @@ fn main() {
                     &c.bus.ppu.framebuffer,
                     &mut canvas_buffer,
                     settings.aspect_mode,
-                    settings.crt_scanlines,
+                    settings.crt_mode,
                 );
 
                 if turbo_active {
