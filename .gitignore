@@ -1,0 +1,21 @@
+# Rust / Cargo
+/target/
+**/*.rs.bk
+*.pdb
+rustc-ice-*.txt
+
+# ROMs e arquivos de jogos
+/roms/
+*.nes
+*.zip
+
+# Dados locais do PEngine
+/.covers/
+/.states/
+/.stats/
+/.emulator_settings.bin
+/.rom_dir.cfg
+*.sav
+
+# Dados de testes do Cargo Mutants
+**/mutants.out/
