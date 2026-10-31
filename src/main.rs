@@ -3881,7 +3881,7 @@ fn render_arcade_hub_frame(
 
         if gamepad_connected {
             draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", btn_x + 30, 237, 0x2E7D32, 0xFFFFFF);
-            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "JOGAR AGORA", btn_x + 48, 239, 0xFFFFFF);
+        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "> ENTER: JOGAR <", btn_x + 28, 239, 0xFFFFFF);
         } else {
             draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "> PRESSIONE ENTER <", btn_x + 23, 239, 0xFFFFFF);
         }
@@ -3967,7 +3967,7 @@ fn render_arcade_hub_frame(
             buffer,
             CANVAS_WIDTH,
             CANVAS_HEIGHT,
-            "PGUP/PGDN: LETRA A-Z   F2: BUSCAR   ENTER: JOGAR   F1: PASTA   F3: MENU",
+            "PGUP/PGDN: LETRA A-Z   ENTER: JOGAR   D: DETALHES   F1: PASTA   F3: MENU",
             28,
             274,
             0x78909C,
@@ -4471,6 +4471,21 @@ fn load_battery_ram(rom_path: &str, cart: &mut Cartridge) {
     }
 }
 
+fn create_cpu_from_rom(
+    rom_path: &str,
+    sample_rate: f64,
+    audio_buffer: &Arc<Mutex<VecDeque<f32>>>,
+) -> Result<Cpu, String> {
+    let bytes = fs::read(rom_path).map_err(|err| format!("FALHA AO LER ROM: {err}"))?;
+    let mut cart = Cartridge::from_ines(&bytes)?;
+    load_battery_ram(rom_path, &mut cart);
+    let apu = Apu::new(sample_rate, Arc::clone(audio_buffer));
+    let bus = Bus::new(cart, apu);
+    let mut cpu = Cpu::new(bus);
+    cpu.reset();
+    Ok(cpu)
+}
+
 // Guarda ROMs e seleção de pasta em Documentos, longe da Área de Trabalho.
 fn roms_documents_dir() -> PathBuf {
     if let Some(one_drive) = env::var_os("OneDrive") {
@@ -4779,13 +4794,8 @@ fn main() {
                         0 => {
                             // 1. INICIAR O JOGO
                             let target_rom = rom_list[selected_actual_rom_idx].path.clone();
-                            if let Ok(bytes) = fs::read(&target_rom) {
-                                if let Ok(mut cart) = Cartridge::from_ines(&bytes) {
-                                    load_battery_ram(&target_rom, &mut cart);
-                                    let apu = Apu::new(sample_rate, Arc::clone(&audio_buffer));
-                                    let bus = Bus::new(cart, apu);
-                                    let mut c = Cpu::new(bus);
-                                    c.reset();
+                            match create_cpu_from_rom(&target_rom, sample_rate, &audio_buffer) {
+                                Ok(c) => {
                                     cpu = Some(c);
                                     active_rom_path = target_rom;
                                     active_game_rom_idx = Some(selected_actual_rom_idx);
@@ -4801,6 +4811,9 @@ fn main() {
                                     rom_list[selected_actual_rom_idx].stats.last_played_epoch = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default().as_secs();
                                     save_game_stats(&rom_list[selected_actual_rom_idx].name, &rom_list[selected_actual_rom_idx].stats);
                                     game_start_time = Some(SystemTime::now());
+                                }
+                                Err(err) => {
+                                    osd_message = Some((err, 150));
                                 }
                             }
                         }
@@ -4953,6 +4966,32 @@ fn main() {
                     }
 
                     if play_pressed && !filtered_indices.is_empty() {
+                        let target_rom = rom_list[selected_actual_rom_idx].path.clone();
+                        match create_cpu_from_rom(&target_rom, sample_rate, &audio_buffer) {
+                            Ok(c) => {
+                                cpu = Some(c);
+                                active_rom_path = target_rom;
+                                active_game_rom_idx = Some(selected_actual_rom_idx);
+                                save_slots = [None, None, None];
+                                rewind_mgr.clear();
+                                in_hub = false;
+                                in_detail_card = false;
+                                in_game_menu = false;
+                                osd_message = Some(("BOM JOGO!".to_string(), 60));
+                                rom_list[selected_actual_rom_idx].stats.play_count += 1;
+                                rom_list[selected_actual_rom_idx].stats.last_played_epoch = SystemTime::now()
+                                    .duration_since(SystemTime::UNIX_EPOCH)
+                                    .unwrap_or_default()
+                                    .as_secs();
+                                save_game_stats(
+                                    &rom_list[selected_actual_rom_idx].name,
+                                    &rom_list[selected_actual_rom_idx].stats,
+                                );
+                                game_start_time = Some(SystemTime::now());
+                            }
+                            Err(err) => osd_message = Some((err, 150)),
+                        }
+                    } else if window.is_key_pressed(Key::D, KeyRepeat::No) && !filtered_indices.is_empty() {
                         in_detail_card = true;
                         detail_cursor = 0;
                     }
@@ -4996,6 +5035,21 @@ fn main() {
                     settings_row,
                     xbox.connected,
                 );
+            }
+
+            if let Some((message, _)) = osd_message.as_ref() {
+                let message: String = message.chars().take(72).collect();
+                let box_w = (message.len() * 6 + 14).min(CANVAS_WIDTH - 20);
+                let x = (CANVAS_WIDTH - box_w) / 2;
+                draw_rect(&mut canvas_buffer, CANVAS_WIDTH, CANVAS_HEIGHT, x, 248, box_w, 16, 0x161C28);
+                draw_rect(&mut canvas_buffer, CANVAS_WIDTH, CANVAS_HEIGHT, x, 248, 3, 16, 0x00E5FF);
+                draw_text(&mut canvas_buffer, CANVAS_WIDTH, CANVAS_HEIGHT, &message, x + 8, 252, 0xFFFFFF);
+                if let Some((_, frames_left)) = osd_message.as_mut() {
+                    *frames_left = frames_left.saturating_sub(1);
+                }
+                if osd_message.as_ref().is_some_and(|(_, frames_left)| *frames_left == 0) {
+                    osd_message = None;
+                }
             }
 
             window.update_with_buffer(&canvas_buffer, CANVAS_WIDTH, CANVAS_HEIGHT).unwrap();
