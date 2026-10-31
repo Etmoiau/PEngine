@@ -355,8 +355,8 @@ fn poll_xbox_controller() -> XboxInputState {
                     let ly = state.gamepad.s_thumb_ly;
 
                     let mut nes_pad = 0u8;
-                    if (b & 0x1000) != 0 || (b & 0x8000) != 0 { nes_pad |= 1 << 0; } // A ou Y -> A
-                    if (b & 0x4000) != 0 || (b & 0x2000) != 0 { nes_pad |= 1 << 1; } // X ou B -> B
+                    if (b & 0x1000) != 0 { nes_pad |= 1 << 0; } // A -> A
+                    if (b & 0x2000) != 0 { nes_pad |= 1 << 1; } // B -> B
                     if (b & 0x0020) != 0 { nes_pad |= 1 << 2; } // Back -> Select
                     if (b & 0x0010) != 0 { nes_pad |= 1 << 3; } // Start -> Start
 
@@ -875,6 +875,12 @@ impl DmcChannel {
     }
 
     pub fn clock_timer(&mut self) {
+        // Pré-carrega o próximo byte enquanto os bits atuais ainda estão tocando.
+        if self.sample_buffer.is_none() && self.bytes_remaining > 0 && self.dma_read_addr.is_none() {
+            self.dma_read_addr = Some(self.current_address);
+            self.current_address = if self.current_address == 0xFFFF { 0x8000 } else { self.current_address + 1 };
+            self.bytes_remaining -= 1;
+        }
         if self.timer_value == 0 {
             self.timer_value = self.timer_period;
             self.clock_shifter();
@@ -898,34 +904,19 @@ impl DmcChannel {
         self.bits_remaining = self.bits_remaining.saturating_sub(1);
         if self.bits_remaining == 0 {
             self.bits_remaining = 8;
-            // Busca o próximo byte quando o byte atual já foi consumido.
-            self.poll_dma();
             if let Some(byte) = self.sample_buffer.take() {
                 self.silence = false;
                 self.shift_register = byte;
+                // IRQ/loop só são acionados quando o último byte chega ao shifter.
+                if self.bytes_remaining == 0 {
+                    if self.loop_flag {
+                        self.restart();
+                    } else if self.irq_enabled {
+                        self.irq_pending = true;
+                    }
+                }
             } else {
                 self.silence = true;
-            }
-        }
-    }
-
-    pub fn poll_dma(&mut self) {
-        // Se o buffer de sample estiver livre e ainda houver bytes, solicita DMA
-        if self.sample_buffer.is_none() && self.bytes_remaining > 0 {
-            self.dma_read_addr = Some(self.current_address);
-            self.current_address = if self.current_address == 0xFFFF {
-                0x8000
-            } else {
-                self.current_address + 1
-            };
-            self.bytes_remaining -= 1;
-
-            if self.bytes_remaining == 0 {
-                if self.loop_flag {
-                    self.restart();
-                } else if self.irq_enabled {
-                    self.irq_pending = true;
-                }
             }
         }
     }
@@ -1812,8 +1803,11 @@ impl Cartridge {
                 let offset = match self.mmc5_chr_mode & 3 {
                     0 => self.mmc5_chr_banks[7] * 0x2000 + addr,
                     1 => { let reg = if addr < 0x1000 { 3 } else { 7 }; self.mmc5_chr_banks[reg] * 0x1000 + (addr & 0x0FFF) }
-                    2 => { let reg = slot & !1; self.mmc5_chr_banks[reg + 1] * 0x0800 + (addr & 0x07FF) }
-                    _ => self.mmc5_chr_banks[slot] * 0x0400 + (addr & 0x03FF),
+                    2 => { let reg = (slot & !1) + 1; self.mmc5_chr_banks[reg] * 0x0800 + (addr & 0x07FF) }
+                    _ => {
+                        let reg = if self.mmc5_last_chr_set == 1 && slot >= 4 { 8 + (slot & 3) } else { slot };
+                        self.mmc5_chr_banks[reg] * 0x0400 + (addr & 0x03FF)
+                    }
                 };
                 self.chr_mem[offset % self.chr_mem.len()]
             }
@@ -2893,6 +2887,33 @@ impl Cpu {
                 self.x = ax.wrapping_sub(val);
                 self.update_zn(self.x);
             }
+            "XAA" => {
+                self.a = (self.a | 0xEE) & self.x & self.bus.cpu_read(addr);
+                self.update_zn(self.a);
+            }
+            "LAS" => {
+                let val = self.bus.cpu_read(addr) & self.sp;
+                self.a = val; self.x = val; self.sp = val;
+                self.update_zn(val);
+                if page_crossed { cycles += 1; }
+            }
+            "AHX" => {
+                let high = ((addr >> 8) as u8).wrapping_add(1);
+                self.bus.cpu_write(addr, self.a & self.x & high);
+            }
+            "SHY" => {
+                let high = ((addr >> 8) as u8).wrapping_add(1);
+                self.bus.cpu_write(addr, self.y & high);
+            }
+            "SHX" => {
+                let high = ((addr >> 8) as u8).wrapping_add(1);
+                self.bus.cpu_write(addr, self.x & high);
+            }
+            "TAS" => {
+                self.sp = self.a & self.x;
+                let high = ((addr >> 8) as u8).wrapping_add(1);
+                self.bus.cpu_write(addr, self.sp & high);
+            }
             "NOP" => {
                 if page_crossed { cycles += 1; }
             }
@@ -3214,6 +3235,11 @@ fn decode_opcode(op: u8) -> (&'static str, AddrMode, usize) {
 
         0x0B | 0x2B => ("ANC", Imm, 2), 0x4B => ("ALR", Imm, 2),
         0x6B => ("ARR", Imm, 2), 0xCB => ("AXS", Imm, 2),
+
+        0x8B => ("XAA", Imm, 2), 0xBB => ("LAS", Aby, 4),
+        0x93 => ("AHX", Izy, 6), 0x9F => ("AHX", Aby, 5),
+        0x9C => ("SHY", Abx, 5), 0x9E => ("SHX", Aby, 5),
+        0x9B => ("TAS", Aby, 5),
 
         // NOPs não oficiais com operandos: avançam o PC para o byte seguinte correto.
         0x80 | 0x82 | 0x89 | 0xC2 | 0xE2 => ("NOP", Imm, 2),
@@ -4618,10 +4644,10 @@ fn main() {
         prev_lt_btn = xbox.lt_held;
 
         // NOVO: Detecta se LB ou RB foram clicados neste frame exato (Clique Único)
-        let lb_just_pressed = (xbox.lb_held || xbox.lt_held) && !prev_lb;
-        let rb_just_pressed = (xbox.rb_held || xbox.rt_held) && !prev_rb;
-        prev_lb = xbox.lb_held || xbox.lt_held;
-        prev_rb = xbox.rb_held || xbox.rt_held;
+        let lb_just_pressed = xbox.lb_held && !prev_lb;
+        let rb_just_pressed = xbox.rb_held && !prev_rb;
+        prev_lb = xbox.lb_held;
+        prev_rb = xbox.rb_held;
 
         if (joy & 0xC0) != 0 || (joy & 0x30) != 0 {
             joy_hold_timer += 1;
@@ -5187,6 +5213,21 @@ fn main() {
                     }
                 }
 
+                // Atualiza o controle antes de avançar a CPU para o jogo ler a entrada neste frame.
+                let mut joy_state = 0u8;
+                if window.is_key_down(Key::Z)          { joy_state |= 1 << 0; }
+                if window.is_key_down(Key::X)          { joy_state |= 1 << 1; }
+                if window.is_key_down(Key::RightShift) { joy_state |= 1 << 2; }
+                if window.is_key_down(Key::Enter)      { joy_state |= 1 << 3; }
+                if window.is_key_down(Key::Up)         { joy_state |= 1 << 4; }
+                if window.is_key_down(Key::Down)       { joy_state |= 1 << 5; }
+                if window.is_key_down(Key::Left)       { joy_state |= 1 << 6; }
+                if window.is_key_down(Key::Right)      { joy_state |= 1 << 7; }
+                joy_state |= joy;
+                if xbox.y_pressed { joy_state |= 1 << 0; } // Y como A dentro do jogo
+                if xbox.x_pressed { joy_state |= 1 << 1; } // X como B dentro do jogo
+                c.bus.joypad1.status = joy_state;
+
                 let rewind_active = xbox.lt_held || window.is_key_down(Key::Backspace);
                 let turbo_active = (window.is_key_down(Key::Tab) || xbox.rb_held || xbox.rt_held) && !rewind_active;
                 if rewind_active {
@@ -5199,19 +5240,6 @@ fn main() {
                     }
                     rewind_mgr.record_frame(c);
                 }
-
-                let mut joy_state = 0u8;
-                if window.is_key_down(Key::Z)          { joy_state |= 1 << 0; }
-                if window.is_key_down(Key::X)          { joy_state |= 1 << 1; }
-                if window.is_key_down(Key::RightShift) { joy_state |= 1 << 2; }
-                if window.is_key_down(Key::Enter)      { joy_state |= 1 << 3; }
-                if window.is_key_down(Key::Up)         { joy_state |= 1 << 4; }
-                if window.is_key_down(Key::Down)       { joy_state |= 1 << 5; }
-                if window.is_key_down(Key::Left)       { joy_state |= 1 << 6; }
-                if window.is_key_down(Key::Right)      { joy_state |= 1 << 7; }
-
-                joy_state |= joy;
-                c.bus.joypad1.status = joy_state;
 
                 // Desenha o jogo na tela esticada ou com aspecto 4:3 com suporte a Scanlines
                 blit_nes_to_canvas(
