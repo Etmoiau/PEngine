@@ -2285,6 +2285,10 @@ impl Ppu {
             if self.cycle == 257 {
                 self.transfer_address_x();
             }
+            // A linha de pré-renderização também gera o clock do contador IRQ do MMC3.
+            if self.cycle == 260 && self.rendering_enabled() {
+                cart.clock_scanline_irq();
+            }
             if self.cycle >= 280 && self.cycle <= 304 {
                 self.transfer_address_y();
             }
@@ -4621,6 +4625,9 @@ fn main() {
     let mut prev_lt_btn = false;
 
     while window.is_open() {
+        let esc_pressed = window.is_key_pressed(Key::Escape, KeyRepeat::No);
+        let f3_pressed = window.is_key_pressed(Key::F3, KeyRepeat::No);
+
         // Atalho universal de Tela Cheia (F11 ou Alt + Enter)
         let alt_enter = (window.is_key_down(Key::LeftAlt) || window.is_key_down(Key::RightAlt))
             && window.is_key_pressed(Key::Enter, KeyRepeat::No);
@@ -4663,8 +4670,8 @@ fn main() {
         if in_hub {
             // Tecla F3 ou Botão START do Xbox
             let start_pressed = (joy_just_pressed & (1 << 3)) != 0;
-            let f3_pressed = window.is_key_pressed(Key::F3, KeyRepeat::No);
-            let toggle_settings = f3_pressed || start_pressed;
+            let toggle_settings = f3_pressed || start_pressed
+                || (esc_pressed && !in_detail_card && !in_search_mode);
 
             // 1. SE O MENU ESTIVER ABERTO:
             if in_settings_menu {
@@ -4690,8 +4697,6 @@ fn main() {
 
                 // Se apertar F3, START ou B/ESC, fecha o menu e encerra o frame
                 let b_pressed = (joy_just_pressed & (1 << 1)) != 0;
-                let esc_pressed = window.is_key_pressed(Key::Escape, KeyRepeat::No);
-                
                 if toggle_settings || b_pressed || esc_pressed {
                     in_settings_menu = false;
                 } else {
@@ -5011,8 +5016,7 @@ fn main() {
 
                 // Dispara o menu ao segurar Start por ~45 frames ou pressionar ESC / Menu.
                 let hold_triggered = start_hold_frames == 45;
-                let esc_pressed = window.is_key_pressed(Key::Escape, KeyRepeat::No);
-                let toggle_menu = esc_pressed || xbox_menu_just_pressed || hold_triggered;
+                let toggle_menu = esc_pressed || f3_pressed || xbox_menu_just_pressed || hold_triggered;
 
                 if in_game_menu {
                     // 1. Navegação entre Abas com LB/RB (clique único) ou teclas 1, 2, 3
