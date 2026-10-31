@@ -15,6 +15,24 @@ Emulador de NES escrito em Rust, com uma biblioteca visual de jogos, navegação
 
 A compatibilidade varia conforme o jogo e o mapper usado. Alguns recursos de mappers avançados ainda estão em desenvolvimento.
 
+## Capturas de tela
+
+### Seleção de idioma
+
+![Tela de boas-vindas e seleção de idioma](docs/screenshots/welcome-language.png)
+
+### Biblioteca de jogos
+
+![Biblioteca visual de jogos do PEngine](docs/screenshots/game-library.png)
+
+### Opções de vídeo
+
+![Menu de opções de vídeo](docs/screenshots/video-settings.png)
+
+### Busca de jogos
+
+![Busca de jogos pela biblioteca](docs/screenshots/game-search.png)
+
 ## ROMs: use seus próprios arquivos
 
 Nenhum jogo vem incluído com o PEngine. Não coloque ROMs no repositório nem espere que o emulador as baixe.
