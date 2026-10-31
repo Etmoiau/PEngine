@@ -17,5 +17,9 @@ rustc-ice-*.txt
 /.rom_dir.cfg
 *.sav
 
+# Arquivos auxiliares mantidos apenas localmente
+/codigo_emulador_nes.txt
+/testar_emulador.bat
+
 # Dados de testes do Cargo Mutants
 **/mutants.out/
