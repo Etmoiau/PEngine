@@ -3881,7 +3881,7 @@ fn render_arcade_hub_frame(
 
         if gamepad_connected {
             draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", btn_x + 30, 237, 0x2E7D32, 0xFFFFFF);
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "> ENTER: JOGAR <", btn_x + 28, 239, 0xFFFFFF);
+            draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "DETALHES", btn_x + 48, 239, 0xFFFFFF);
         } else {
             draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "> PRESSIONE ENTER <", btn_x + 23, 239, 0xFFFFFF);
         }
@@ -3951,7 +3951,7 @@ fn render_arcade_hub_frame(
 
         draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "A", cx, 272, 0x2E7D32, 0xFFFFFF);
         cx += 16;
-        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "JOGAR", cx, 274, 0x90A4AE);
+        draw_text(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "DETALHES", cx, 274, 0x90A4AE);
         cx += 42;
 
         draw_button_badge(buffer, CANVAS_WIDTH, CANVAS_HEIGHT, "Y", cx, 272, 0xF57F17, 0xFFFFFF);
@@ -3967,7 +3967,7 @@ fn render_arcade_hub_frame(
             buffer,
             CANVAS_WIDTH,
             CANVAS_HEIGHT,
-            "PGUP/PGDN: LETRA A-Z   ENTER: JOGAR   D: DETALHES   F1: PASTA   F3: MENU",
+            "PGUP/PGDN: LETRA A-Z   ENTER: DETALHES   F1: PASTA   F3: MENU",
             28,
             274,
             0x78909C,
@@ -4966,32 +4966,6 @@ fn main() {
                     }
 
                     if play_pressed && !filtered_indices.is_empty() {
-                        let target_rom = rom_list[selected_actual_rom_idx].path.clone();
-                        match create_cpu_from_rom(&target_rom, sample_rate, &audio_buffer) {
-                            Ok(c) => {
-                                cpu = Some(c);
-                                active_rom_path = target_rom;
-                                active_game_rom_idx = Some(selected_actual_rom_idx);
-                                save_slots = [None, None, None];
-                                rewind_mgr.clear();
-                                in_hub = false;
-                                in_detail_card = false;
-                                in_game_menu = false;
-                                osd_message = Some(("BOM JOGO!".to_string(), 60));
-                                rom_list[selected_actual_rom_idx].stats.play_count += 1;
-                                rom_list[selected_actual_rom_idx].stats.last_played_epoch = SystemTime::now()
-                                    .duration_since(SystemTime::UNIX_EPOCH)
-                                    .unwrap_or_default()
-                                    .as_secs();
-                                save_game_stats(
-                                    &rom_list[selected_actual_rom_idx].name,
-                                    &rom_list[selected_actual_rom_idx].stats,
-                                );
-                                game_start_time = Some(SystemTime::now());
-                            }
-                            Err(err) => osd_message = Some((err, 150)),
-                        }
-                    } else if window.is_key_pressed(Key::D, KeyRepeat::No) && !filtered_indices.is_empty() {
                         in_detail_card = true;
                         detail_cursor = 0;
                     }
