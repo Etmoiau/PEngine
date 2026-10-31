@@ -4594,7 +4594,7 @@ fn main() {
     let mut canvas_buffer = vec![0u32; CANVAS_WIDTH * CANVAS_HEIGHT];
 
     let mut window = Window::new(
-        "Rust NES [ARCADE SYSTEM | ESC / Start: Pause Menu | F1: Pasta | F3: Opcoes]",
+        "PEngine",
         CANVAS_WIDTH,
         CANVAS_HEIGHT,
         WindowOptions {
